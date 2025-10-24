@@ -61,16 +61,17 @@ Before running this project, make sure you have:
 
 **Option A: If you have Git installed**
 ```bash
-git clone https://github.com/DeboFTW/weather-app.git
-cd weather-app
+git clone https://github.com/DeboFTW/ClimaSense.git
+cd ClimaSense
 ```
 
 **Option B: If you don't have Git**
-1. Download the project as a ZIP file from GitHub
-2. Extract the ZIP file to a folder
-3. Open terminal/command prompt and navigate to that folder:
+1. Go to https://github.com/DeboFTW/ClimaSense
+2. Click the green **"Code"** button → **"Download ZIP"**
+3. Extract the ZIP file to a folder
+4. Open terminal/command prompt and navigate to that folder:
    ```bash
-   cd path/to/Weather-Prediction
+   cd path/to/ClimaSense
    ```
 
 ---
@@ -425,8 +426,8 @@ If you're stuck or have questions:
 
 ### **Quick Start (If you're technical):**
 ```bash
-git clone https://github.com/DeboFTW/weather-app.git
-cd weather-app
+git clone https://github.com/DeboFTW/ClimaSense.git
+cd ClimaSense
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -434,6 +435,32 @@ python main.py
 ```
 
 Visit: http://127.0.0.1:5000
+
+### **Contributing to This Project:**
+
+If you want to make changes and push them to GitHub:
+
+```bash
+# 1. Make your changes to the code
+
+# 2. Check what changed
+git status
+
+# 3. Stage your changes
+git add .
+
+# 4. Commit with a descriptive message
+git commit -m "Description of your changes"
+
+# 5. Push to GitHub
+git push origin fresh-main:main
+```
+
+**Important Notes:**
+- Your local branch is `fresh-main`, but it pushes to `main` on GitHub
+- The `.gitignore` file automatically excludes `venv/` folder
+- Never commit large files or sensitive API keys
+- Use meaningful commit messages
 
 ### **API Endpoints:**
 - `GET /` - Main dashboard
