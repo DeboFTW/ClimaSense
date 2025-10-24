@@ -461,7 +461,7 @@ Visit: http://127.0.0.1:5000
 
 ### **Contributing to This Project:**
 
-This repository has **branch protection rules** enabled. All changes must go through Pull Requests.
+If you want to make changes and contribute:
 
 #### **Step 1: Clone and Setup**
 ```bash
@@ -474,42 +474,33 @@ pip install -r requirements.txt
 
 #### **Step 2: Make Your Changes**
 ```bash
-# 1. Create a new branch for your feature
-git checkout -b feature/your-feature-name
+# 1. Make sure you're on main branch
+git checkout main
 
-# 2. Make your code changes
+# 2. Pull latest changes
+git pull origin main
+
+# 3. Make your code changes
 # ... edit files ...
 
-# 3. Check what changed
+# 4. Check what changed
 git status
 
-# 4. Stage your changes
+# 5. Stage your changes
 git add .
 
-# 5. Commit with a descriptive message
+# 6. Commit with a descriptive message
 git commit -m "Add: Description of your changes"
+
+# 7. Push to GitHub
+git push origin main
 ```
-
-#### **Step 3: Push and Create Pull Request**
-```bash
-# 6. Push your branch to GitHub
-git push origin feature/your-feature-name
-
-# 7. Go to GitHub and create a Pull Request:
-# https://github.com/DeboFTW/ClimaSense/pulls
-```
-
-#### **Step 4: Review and Merge**
-1. Your Pull Request will be reviewed
-2. Make any requested changes
-3. Once approved, it will be merged into `main`
 
 **Important Notes:**
-- ⛔ **Direct pushes to `main` are blocked** - you must use Pull Requests
 - ✅ The `.gitignore` file automatically excludes `venv/` folder
 - ✅ Never commit large files or sensitive API keys
+- ✅ Always pull before making changes to avoid conflicts
 - ✅ Use meaningful commit messages (e.g., "Add: feature", "Fix: bug", "Update: docs")
-- ✅ Branch protection ensures code quality through reviews
 
 ### **API Endpoints:**
 - `GET /` - Main dashboard
