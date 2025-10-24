@@ -111,7 +111,9 @@ pip install -r requirements.txt
 - `pmdarima` - Machine Learning for predictions
 - `statsmodels` - Time series forecasting
 - `matplotlib` - Creating charts
-- `numpy` - Mathematical operations
+- `numpy` - Mathematical operations (compatible with Python 3.12)
+
+**Note:** If you see numpy compatibility warnings with pmdarima, the requirements.txt automatically uses numpy < 2.0 for compatibility.
 
 This will take 2-5 minutes depending on your internet speed.
 
@@ -123,6 +125,11 @@ Now start the Flask server:
 
 ```bash
 python main.py
+# OR if python points to Python 2.x
+python3 main.py
+# OR use virtual environment's Python directly
+./venv/bin/python main.py  # Linux/Mac
+venv\Scripts\python.exe main.py  # Windows
 ```
 
 **You should see something like:**
@@ -317,6 +324,21 @@ pip install -r requirements.txt
 - Check browser console for errors (F12)
 - Refresh the page (Ctrl+R)
 
+### **Problem 7: VS Code showing errors in index.html**
+**Solution:**
+VS Code may show JavaScript errors on lines with `{{ variable }}` syntax. These are **false errors**!
+- The `{{ }}` syntax is Jinja2 (Flask templates), not JavaScript
+- Your code is correct - these warnings can be safely ignored
+- The `.vscode/settings.json` file in this project helps reduce these warnings
+- Or install the **"Better Jinja"** extension in VS Code
+
+### **Problem 8: numpy compatibility error with pmdarima**
+**Solution:**
+```bash
+pip install "numpy<2.0.0" --force-reinstall
+```
+This downgrade numpy to version compatible with pmdarima (already handled in requirements.txt)
+
 ---
 
 ## 🎓 For Students/Learners
@@ -330,6 +352,7 @@ pip install -r requirements.txt
 4. **Data Processing**: Working with Pandas and NumPy
 5. **Frontend**: HTML, CSS, Bootstrap, JavaScript
 6. **Chatbot Development**: Natural language understanding basics
+7. **Git & GitHub**: Version control and Pull Request workflow
 
 **Files to Study:**
 - `main.py` - Start here! Contains all the main logic
@@ -438,29 +461,55 @@ Visit: http://127.0.0.1:5000
 
 ### **Contributing to This Project:**
 
-If you want to make changes and push them to GitHub:
+This repository has **branch protection rules** enabled. All changes must go through Pull Requests.
 
+#### **Step 1: Clone and Setup**
 ```bash
-# 1. Make your changes to the code
-
-# 2. Check what changed
-git status
-
-# 3. Stage your changes
-git add .
-
-# 4. Commit with a descriptive message
-git commit -m "Description of your changes"
-
-# 5. Push to GitHub
-git push origin fresh-main:main
+git clone https://github.com/DeboFTW/ClimaSense.git
+cd ClimaSense
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
+#### **Step 2: Make Your Changes**
+```bash
+# 1. Create a new branch for your feature
+git checkout -b feature/your-feature-name
+
+# 2. Make your code changes
+# ... edit files ...
+
+# 3. Check what changed
+git status
+
+# 4. Stage your changes
+git add .
+
+# 5. Commit with a descriptive message
+git commit -m "Add: Description of your changes"
+```
+
+#### **Step 3: Push and Create Pull Request**
+```bash
+# 6. Push your branch to GitHub
+git push origin feature/your-feature-name
+
+# 7. Go to GitHub and create a Pull Request:
+# https://github.com/DeboFTW/ClimaSense/pulls
+```
+
+#### **Step 4: Review and Merge**
+1. Your Pull Request will be reviewed
+2. Make any requested changes
+3. Once approved, it will be merged into `main`
+
 **Important Notes:**
-- Your local branch is `fresh-main`, but it pushes to `main` on GitHub
-- The `.gitignore` file automatically excludes `venv/` folder
-- Never commit large files or sensitive API keys
-- Use meaningful commit messages
+- ⛔ **Direct pushes to `main` are blocked** - you must use Pull Requests
+- ✅ The `.gitignore` file automatically excludes `venv/` folder
+- ✅ Never commit large files or sensitive API keys
+- ✅ Use meaningful commit messages (e.g., "Add: feature", "Fix: bug", "Update: docs")
+- ✅ Branch protection ensures code quality through reviews
 
 ### **API Endpoints:**
 - `GET /` - Main dashboard
