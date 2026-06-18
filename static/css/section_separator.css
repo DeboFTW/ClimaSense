@@ -1,0 +1,90 @@
+/* Section Separators and Clean Layout */
+
+/* Ensure section 4 has proper bottom spacing */
+#sec-4 {
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+/* Original graphs section */
+#sec-4 .graphs {
+    margin-bottom: 40px;
+    padding-bottom: 40px;
+}
+
+/* Rain prediction styling */
+.sec-4-bottom {
+    text-align: center;
+    padding: 30px 20px;
+    margin: 40px auto 0;
+    max-width: 800px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+/* Clear separation before model comparison */
+.model-comparison-section {
+    clear: both;
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure no overflow issues */
+body {
+    overflow-x: hidden;
+}
+
+.container-table100,
+.wrap-table100,
+.graphs {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Make charts responsive */
+#sec-4 canvas {
+    max-width: 100%;
+    height: auto !important;
+}
+
+/* Clean table styling */
+.table100 {
+    margin-bottom: 40px;
+}
+
+/* Prediction section heading */
+.sec-4-heading {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    color: #333;
+}
+
+.sec-4-content {
+    text-align: center;
+    margin: 50px 0 30px;
+    font-size: 2rem;
+    color: #444;
+}
+
+/* Smooth scrolling for better UX */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Ensure sections don't overlap */
+section {
+    position: relative;
+    z-index: auto;
+}
+
+/* Model comparison takes full width */
+.model-comparison-section {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}

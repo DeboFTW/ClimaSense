@@ -3,554 +3,824 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Weather App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClimaSense — Weather Dashboard</title>
   <link rel="icon" href="../static/weather.png">
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
-  
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-  
+
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
   <link rel="stylesheet" href="../static/css/styles.css">
   <link rel="stylesheet" href="../static/css/chatbot.css">
+  <link rel="stylesheet" href="../static/css/dashboard.css">
+  <link rel="stylesheet" href="../static/css/sidebar.css">
+  <link rel="stylesheet" href="../static/css/panels.css">
 
   <script src="https://kit.fontawesome.com/9df87047e7.js" crossorigin="anonymous"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
+  {% if predict_status %}{% set start_tab = 'prediction' %}{% else %}{% set start_tab = 'current' %}{% endif %}
 
-  <section id="sec-1" class="background-tint">
+  <div class="cs-shell">
 
-    <div class="container">
-
-    </div>
-
-    <div class="sec-1-content">
-      {% if predict_status: %}
-      <h1 class="main-heading"> Your Data is Predicted Using Our Machine Learning Model </h1>
-      {% else: %}
-      <h1 class="main-heading"> ClimaSense: A Smart Weather and Air Quality Monitoring Dashboard</h1>
-      {% endif %}
-    </div>
-  </section>
-
-  <section id="sec-2">
-
-    <div class="row container-fluid">
-
-      <div class="row justify-content-center text-center">
-        <div class="feature-box col-lg-4">
-        <a href="#sec-3" class="item"><h3 class="feature-heading">Current Weather</h3></a>
-        <p>Check weather in your city</p>
+    <!-- ===== Sidebar ===== -->
+    <aside class="cs-sidebar" id="csSidebar">
+      <div class="cs-brand">
+        <i class="fas fa-cloud-sun"></i>
+        <div>
+          <div class="cs-brand-text">ClimaSense</div>
+          <div class="cs-brand-sub">Weather &amp; Climate</div>
+        </div>
       </div>
 
-      <div class="feature-box col-lg-4">
-        <a href="#sec-4" class="item"><h3 class="feature-heading">Weather Prediction</h3></a>
-        <p>Predict weather for the next 5 hours in your city</p>
-        <a class="btn btn-primary btn-outline-light get-started" href="#sec-4">Go</a>
+      <nav class="cs-nav">
+        <button type="button" class="cs-nav-item" data-tab="current">
+          <i class="fas fa-cloud-sun"></i> Current Weather
+        </button>
+        <button type="button" class="cs-nav-item" data-tab="prediction">
+          <i class="fas fa-wand-magic-sparkles"></i> Weather Prediction
+        </button>
+        <button type="button" class="cs-nav-item" data-tab="aqi">
+          <i class="fas fa-wind"></i> Air Quality Index
+        </button>
+        <a class="cs-nav-item" href="{{ url_for('climate') }}">
+          <i class="fas fa-chart-line"></i> Climate Analytics
+        </a>
+      </nav>
+
+      <div class="cs-sidebar-footer">
+        ClimaSense &middot; Hybrid ML
       </div>
-  
-      <div class="feature-box col-lg-4">
-        <a href="#sec-3-5" class="item"><h3 class="feature-heading">Air Quality Index</h3></a>
-        <p>Get AQI and predictions for the next 5 hours</p>
-        <a class="btn btn-primary btn-outline-light get-started" href="#sec-3-5">Go</a>
+    </aside>
+
+    <!-- backdrop for mobile drawer -->
+    <div class="cs-backdrop" id="csBackdrop"></div>
+
+    <!-- ===== Main content ===== -->
+    <div class="cs-main">
+
+      <!-- Mobile topbar -->
+      <div class="cs-topbar">
+        <button type="button" class="cs-burger" id="csBurger" aria-label="Open menu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <span class="cs-topbar-title">ClimaSense</span>
       </div>
 
-    </div>
+      <!-- ============ TAB: CURRENT WEATHER ============ -->
+      <section class="cs-panel" id="panel-current">
+        <section id="sec-3" class="background-tint-1">
+          <section class="vh-100">
+            <div class="container py-4 h-100">
+              <div class="row d-flex justify-content-center align-items-center">
+                <h1 class="mb-4 sec-3-heading">Check the weather forecast</h1>
+                <div class="col-md-8 col-lg-6 col-xl-4">
 
-  </section>
+                  <form name="city search" id="weatherSearch" action="{{ url_for('home') }}" method="post" novalidate>
+                    <div class="input-group rounded mb-3">
+                      <input type="search" name="city" class="form-control rounded" placeholder="Enter City Name" aria-label="Search" aria-describedby="search-addon" />
+                      <span>
+                        <button type="submit" class="btn btn-primary" id="searchCity">Check</button>
+                      </span>
+                    </div>
+                  </form>
 
-  <section id="sec-3" class="background-tint-1">
+                  <div class="card shadow-0 border">
+                    <div class="card-body p-4">
+                      {% if status: %}
+                      <h4 class="mb-3 sfw-normal ">{{ city }}, {{ country }}</h4>
+                      <p class="mb-2">Current temperature: <strong>{{ current_temp }}°C</strong></p>
+                      <p>Feels like: <strong>{{ feels_like }}°C</strong></p>
+                      <p>Max: <strong>{{ temp_max }}°C</strong>, Min: <strong>{{ temp_min }}°C</strong></p>
+                      <p>Humidity: <strong>{{ humidity }} %</strong></p>
 
-    <section class="vh-100">
-      <div class="container py-4 h-100">      
-        <div class="row d-flex justify-content-center align-items-center">
-          <h1 class="mb-4 sec-3-heading">Check the weather forecast </h1>
-          <div class="col-md-8 col-lg-6 col-xl-4">
+                      <div class="d-flex flex-row align-items-center">
+                        <p class="mb-0 me-4">{{ description }}</p>
+                        {% else: %}
+                        <h4 class="mb-3 sfw-normal">Your City</h4>
+                        <p class="mb-2">Current temperature: -<strong>-</strong></p>
+                        <p>Feels like: -<strong>-</strong></p>
+                        <p>Max: <strong>-</strong>  Min: <strong>-</strong></p>
+                        <p>Humidity: -</p>
 
-            <form name="city search" id="weatherSearch" action="{{ url_for('home') }}" method="post" novalidate>
-              <div class="input-group rounded mb-3">
-                <input type="search" name="city" class="form-control rounded" placeholder="Enter City Name" aria-label="Search" aria-describedby="search-addon" />
-                <span>
-                  <button type="submit" class="btn btn-primary" id="searchCity">Check</button>
-                </span>
-              </div>
-            </form>
-    
-            <div class="card shadow-0 border">
-              <div class="card-body p-4">
-                {% if status: %}
-                <h4 class="mb-3 sfw-normal ">{{ city }}, {{ country }}</h4>
-                <p class="mb-2">Current temperature: <strong>{{ current_temp }}°C</strong></p>
-                <p>Feels like: <strong>{{ feels_like }}°C</strong></p>
-                <p>Max: <strong>{{ temp_max }}°C</strong>, Min: <strong>{{ temp_min }}°C</strong></p>
-                <p>Humidity: <strong>{{ humidity }} %</strong></p>
-    
-                <div class="d-flex flex-row align-items-center">
-                  <p class="mb-0 me-4">{{ description }}</p>
-                  {% else: %}
-                  <h4 class="mb-3 sfw-normal">Your City</h4>
-                  <p class="mb-2">Current temperature: -<strong>-</strong></p>
-                  <p>Feels like: -<strong>-</strong></p>
-                  <p>Max: <strong>-</strong>  Min: <strong>-</strong></p>
-                  <p>Humidity: -</p>
-    
-                  <div class="d-flex flex-row align-items-center">
-                    <p class="mb-0 me-4">Status Unknown</p>
-                    {% endif %}
-                    <i class="fas fa-cloud fa-3x" style="color: #eee;"></i>
+                        <div class="d-flex flex-row align-items-center">
+                          <p class="mb-0 me-4">Status Unknown</p>
+                          {% endif %}
+                          <i class="fas fa-cloud fa-3x" style="color: #eee;"></i>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+          </section>
+        </section>
+      </section>
+
+      <!-- ============ TAB: WEATHER PREDICTION ============ -->
+      <section class="cs-panel" id="panel-prediction">
+        <section id="sec-4">
+          <div class="pred-inner">
+          <h1 class="sec-4-heading"><strong>Weather Prediction</strong></h1>
+          <h4 class="predict-text">Enter your city below to predict the weather of your location for next 5 hours</h4>
+          <form name="city search" id="weatherSearchPredict" action="{{ url_for('prediction') }}" method="post" novalidate>
+            <div class="predict-city input-group rounded mb-3">
+              <input type="search" name="city" class="form-control rounded" placeholder="Enter City Name" aria-label="Search" aria-describedby="search-addon" />
+              <span>
+                <button type="submit" class="btn btn-primary" id="searchCityPredict">Predict</button>
+              </span>
+            </div>
+          </form>
+          </div><!-- /.pred-inner -->
+          {% if predict_status: %}
+          <div class="container-table100">
+            <div class="wrap-table100">
+              <div class="table100">
+                <table>
+                  <thead>
+                    <tr class="table100-head">
+                      <th class="column1">Time</th>
+                      <th class="column2">Temperature</th>
+                      <th class="column3">Humidity</th>
+                    </tr>
+                  </thead>
+
+                  <tbody class="table-body">
+                    <tr>
+                      <td class="column1">After 1 hour</td>
+                      <td class="column2">{{ temperature_1 }} °C</td>
+                      <td class="column3">{{ humidity_1 }} %</td>
+                    </tr>
+                    <tr>
+                      <td class="column1">After 2 hours</td>
+                      <td class="column2">{{ temperature_2 }}  °C</td>
+                      <td class="column3">{{ humidity_2 }} %</td>
+                    </tr>
+                    <tr>
+                      <td class="column1">After 3 hours</td>
+                      <td class="column2">{{ temperature_3 }}  °C</td>
+                      <td class="column3">{{ humidity_3 }} %</td>
+                    </tr>
+                    <tr>
+                      <td class="column1">After 4 hours</td>
+                      <td class="column2">{{ temperature_4 }}  °C</td>
+                      <td class="column3">{{ humidity_4 }} %</td>
+                    </tr>
+                    <tr>
+                      <td class="column1">After 5 hours</td>
+                      <td class="column2">{{ temperature_5 }}  °C</td>
+                      <td class="column3">{{ humidity_5 }} %</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="sec-4-content"><strong>Predicted Graphs</strong></h3>
+            <div class="graphs">
+              <div class="graph-box">
+                <canvas id="tlineChart"></canvas>
+              </div>
+              <script>
+                var ctx = document.getElementById("tlineChart").getContext("2d");
+                var tlineChart = new Chart (ctx, {
+                  type: "line",
+                  data: {
+                    labels: {{ tlabels | safe }},
+                    datasets: [
+                      {
+                        label: "TEMPERATURE",
+                        data: {{ tvalues | safe }},
+                        fill: true,
+                        borderColor: "#764ba2",
+                        backgroundColor: "rgba(118, 75, 162, 0.12)",
+                        pointBackgroundColor: "#667eea",
+                        pointRadius: 4,
+                        tension: 0.4
+                      }
+                    ]
+                  },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                  }
+                });
+              </script>
+
+              <div class="graph-box">
+                <canvas id="hlineChart"></canvas>
+              </div>
+              <script>
+                var ctx = document.getElementById("hlineChart").getContext("2d");
+                var hlineChart = new Chart (ctx, {
+                  type: "line",
+                  data: {
+                    labels: {{ hlabels | safe }},
+                    datasets: [
+                      {
+                        label: "HUMIDITY",
+                        data: {{ hvalues | safe }},
+                        fill: true,
+                        borderColor: "#0d9488",
+                        backgroundColor: "rgba(13, 148, 136, 0.12)",
+                        pointBackgroundColor: "#3b82f6",
+                        pointRadius: 4,
+                        tension: 0.4
+                      }
+                    ]
+                  },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                  }
+                });
+              </script>
+            </div>
+          </div>
+
+          {% if humidity_1 >= 75: %}
+          <h4 class="sec-4-bottom">According to predicted data, it may rain in the next hour.</h4>
+          {% elif humidity_2 >=75: %}
+          <h4 class="sec-4-bottom">According to predicted data, it may rain in the next 2 hours.</h4>
+          {% elif humidity_3  >= 75: %}
+          <h4 class="sec-4-bottom">According to predicted data, it may rain in the next 3 hours.</h4>
+          {% elif humidity_4  >= 75: %}
+          <h4 class="sec-4-bottom">According to predicted data, it may rain in the next 4 hours.</h4>
+          {% elif humidity_5  >= 75: %}
+          <h4 class="sec-4-bottom">According to predicted data, it may rain in the next 5 hours.</h4>
+          {% else: %}
+          <h4 class="sec-4-bottom">According to predicted data, it may not rain in the next 5 hours.</h4>
+          {% endif %}
+
+          <!-- Weather Alerts Section -->
+          {% if weather_alerts %}
+          <section class="alerts-section">
+            <div class="alerts-container">
+              <div class="alerts-header">
+                <h2><i class="fas fa-bell"></i> Weather Alerts</h2>
+                <p>Important notifications about upcoming weather conditions</p>
+              </div>
+
+              <div class="alerts-grid">
+                {% for alert in weather_alerts %}
+                <div class="alert-card {{ alert.type }}">
+                  <div class="alert-header">
+                    <div class="alert-icon">
+                      <i class="fas {{ alert.icon }}"></i>
+                    </div>
+                    <span class="alert-badge {{ alert.type }}">{{ alert.type }}</span>
+                  </div>
+                  <h3 class="alert-title">{{ alert.title }}</h3>
+                  <p class="alert-message">{{ alert.message }}</p>
+                  <div class="alert-time">
+                    <i class="fas fa-clock"></i>
+                    {{ alert.time }}
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
+          {% endif %}
+
+          <!-- ML Model Performance Dashboard -->
+          {% if dashboard_metrics %}
+          <section class="dashboard-section">
+            <div class="dashboard-container">
+              <div class="dashboard-header">
+                <h2><i class="fas fa-chart-line"></i> ML Model Performance Dashboard</h2>
+                <p>Real-time metrics from our Hybrid Machine Learning System</p>
+              </div>
+
+              <!-- Key Metrics Grid -->
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <div class="metric-header">
+                    <div class="metric-icon">
+                      <i class="fas fa-database"></i>
+                    </div>
+                  </div>
+                  <div class="metric-label">Data Points</div>
+                  <div class="metric-value">{{ dashboard_metrics.data_points }}</div>
+                  <div class="metric-description">Hours of historical weather data analyzed</div>
+                </div>
+
+                <div class="metric-card">
+                  <div class="metric-header">
+                    <div class="metric-icon">
+                      <i class="fas fa-brain"></i>
+                    </div>
+                  </div>
+                  <div class="metric-label">Models Trained</div>
+                  <div class="metric-value">{{ dashboard_metrics.models_trained }}</div>
+                  <div class="metric-description">ARIMA + LSTM ensemble approach</div>
+                </div>
+
+                <div class="metric-card">
+                  <div class="metric-header">
+                    <div class="metric-icon">
+                      <i class="fas fa-bullseye"></i>
+                    </div>
+                  </div>
+                  <div class="metric-label">Accuracy</div>
+                  <div class="metric-value">{{ dashboard_metrics.accuracy }}</div>
+                  <div class="metric-description">Within ±2°C temperature range</div>
+                </div>
+
+                <div class="metric-card">
+                  <div class="metric-header">
+                    <div class="metric-icon">
+                      <i class="fas fa-clock"></i>
+                    </div>
+                  </div>
+                  <div class="metric-label">Training Time</div>
+                  <div class="metric-value">{{ dashboard_metrics.training_time }}</div>
+                  <div class="metric-description">Optimized model training duration</div>
+                </div>
+              </div>
+
+              <!-- Model Comparison -->
+              <div class="model-comparison">
+                <h3><i class="fas fa-tasks"></i> Model Comparison</h3>
+                <div class="models-row">
+                  <!-- ARIMA Model -->
+                  {% if dashboard_metrics.arima_info %}
+                  <div class="model-box arima">
+                    <h4><i class="fas fa-chart-line"></i> ARIMA Model</h4>
+                    <div class="model-stat">
+                      <span class="label">Temperature Order:</span>
+                      <span class="value">{{ dashboard_metrics.arima_info.temp_order }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">Temperature MAE:</span>
+                      <span class="value">{{ dashboard_metrics.arima_info.temp_mae }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">Temperature RMSE:</span>
+                      <span class="value">{{ dashboard_metrics.arima_info.temp_rmse }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">AIC Score:</span>
+                      <span class="value">{{ dashboard_metrics.arima_info.temp_aic }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">Humidity MAE:</span>
+                      <span class="value">{{ dashboard_metrics.arima_info.humidity_mae }}</span>
+                    </div>
+                  </div>
+                  {% endif %}
+
+                  <!-- LSTM Model -->
+                  {% if dashboard_metrics.lstm_info %}
+                  <div class="model-box lstm">
+                    <h4><i class="fas fa-project-diagram"></i> LSTM Model</h4>
+                    <div class="model-stat">
+                      <span class="label">Lookback Window:</span>
+                      <span class="value">{{ dashboard_metrics.lstm_info.lookback }} hours</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">Temperature Loss:</span>
+                      <span class="value">{{ dashboard_metrics.lstm_info.temp_loss }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">Temperature MAE:</span>
+                      <span class="value">{{ dashboard_metrics.lstm_info.temp_mae }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">Epochs Trained:</span>
+                      <span class="value">{{ dashboard_metrics.lstm_info.epochs_trained }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">Humidity Loss:</span>
+                      <span class="value">{{ dashboard_metrics.lstm_info.humidity_loss }}</span>
+                    </div>
+                  </div>
+                  {% endif %}
+
+                  <!-- Ensemble Model -->
+                  {% if dashboard_metrics.ensemble_info %}
+                  <div class="model-box ensemble">
+                    <h4><i class="fas fa-network-wired"></i> Ensemble Model</h4>
+                    <div class="model-stat">
+                      <span class="label">ARIMA Weight:</span>
+                      <span class="value">{{ dashboard_metrics.ensemble_info.arima_weight }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">LSTM Weight:</span>
+                      <span class="value">{{ dashboard_metrics.ensemble_info.lstm_weight }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">Combination Method:</span>
+                      <span class="value">{{ dashboard_metrics.ensemble_info.method }}</span>
+                    </div>
+                    <div class="model-stat">
+                      <span class="label">Expected Accuracy:</span>
+                      <span class="value">{{ dashboard_metrics.accuracy }}</span>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Confidence Intervals -->
+              <div class="confidence-section">
+                <h3><i class="fas fa-shield-alt"></i> Prediction Confidence</h3>
+                <div class="confidence-info">
+                  <div class="confidence-badge">
+                    {{ dashboard_metrics.confidence_level }} Confidence Level
+                  </div>
+                  {% if dashboard_metrics.confidence_range %}
+                  <div class="confidence-details">
+                    <p><strong>Confidence Range:</strong></p>
+                    <p>{{ dashboard_metrics.confidence_range }}</p>
+                  </div>
+                  {% endif %}
+                  <div class="confidence-details">
+                    <p><strong>Model Type:</strong></p>
+                    <p>Hybrid Ensemble (ARIMA + LSTM)</p>
+                  </div>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.9); border-radius: 10px; text-align: center;">
+                  <p style="color: #666; font-size: 0.9rem; margin: 0;">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Weather predictions are adjusted using current conditions as baseline.
+                    Accuracy improves for near-term (1-2 hours) and decreases for longer horizons (4-5 hours).
+                    Use as guidance, not absolute certainty.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+          {% endif %}
+          {% endif %}
+        </section>
+      </section>
+
+      <!-- ============ TAB: AIR QUALITY INDEX ============ -->
+      <section class="cs-panel" id="panel-aqi">
+        <section id="sec-3-5" class="aqi-section">
+          <div class="aqi-inner">
+            <div class="aqi-head">
+              <h1><i class="fas fa-wind"></i> Air Quality Index</h1>
+              <p>Check PM2.5 air quality and short-term outlook for any city</p>
+            </div>
+
+            <form id="aq-search-form" class="aqi-form">
+              <input type="search" id="aq-city-input" class="aqi-input"
+                placeholder="Enter City Name" aria-label="City" />
+              <button type="submit" class="aqi-btn">Check AQI</button>
+            </form>
+
+            <!-- Loading -->
+            <div id="aq-loading" class="aqi-loading d-none">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading…</span>
+              </div>
+              <p class="mt-2">Fetching air quality data…</p>
+            </div>
+
+            <!-- Error -->
+            <div id="aq-error" class="aqi-error d-none"></div>
+
+            <!-- Results -->
+            <div id="aq-results" class="d-none">
+              <div class="aqi-result-card">
+                <h4 id="aq-city-name">—</h4>
+                <small id="aq-time">—</small>
+                <div class="aqi-number-row">
+                  <span class="aqi-pm25" id="aq-current-pm25">—</span>
+                  <span class="aqi-unit">µg/m³ PM2.5</span>
+                </div>
+                <span class="badge bg-secondary mt-2" id="aq-current-category">—</span>
+              </div>
+              <div class="aqi-result-card mt-3">
+                <h6 class="mb-3 fw-bold">Forecast</h6>
+                <img id="aq-plot-img" class="img-fluid rounded" alt="Air quality forecast" />
+              </div>
+            </div>
+
+            <p class="aqi-hint">
+              <i class="fas fa-info-circle"></i>
+              Enter a city and press "Check AQI". Results appear once the service responds.
+            </p>
+          </div>
+        </section>
+      </section>
+
+    </div><!-- /.cs-main -->
+  </div><!-- /.cs-shell -->
+
+  <!-- ===== Sidebar tab controller ===== -->
+  <script>
+    (function () {
+      var startTab = "{{ start_tab }}";
+      var navItems = document.querySelectorAll('.cs-nav-item[data-tab]');
+      var panels = {
+        current: document.getElementById('panel-current'),
+        prediction: document.getElementById('panel-prediction'),
+        aqi: document.getElementById('panel-aqi')
+      };
+      var topbarTitle = document.querySelector('.cs-topbar-title');
+      var titles = {
+        current: 'Current Weather',
+        prediction: 'Weather Prediction',
+        aqi: 'Air Quality Index'
+      };
+
+      function activate(tab) {
+        if (!panels[tab]) tab = 'current';
+        navItems.forEach(function (btn) {
+          btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        Object.keys(panels).forEach(function (key) {
+          if (panels[key]) panels[key].classList.toggle('active', key === tab);
+        });
+        if (topbarTitle && titles[tab]) topbarTitle.textContent = titles[tab];
+        try { history.replaceState(null, '', '#' + tab); } catch (e) {}
+        closeDrawer();
+      }
+
+      navItems.forEach(function (btn) {
+        btn.addEventListener('click', function () { activate(btn.dataset.tab); });
+      });
+
+      // Initial tab: hash > server-provided start tab
+      var hash = (location.hash || '').replace('#', '');
+      activate(panels[hash] ? hash : startTab);
+
+      // ---- Mobile drawer ----
+      var sidebar = document.getElementById('csSidebar');
+      var backdrop = document.getElementById('csBackdrop');
+      var burger = document.getElementById('csBurger');
+
+      function openDrawer() {
+        sidebar.classList.add('open');
+        backdrop.classList.add('show');
+      }
+      function closeDrawer() {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('show');
+      }
+      if (burger) burger.addEventListener('click', openDrawer);
+      if (backdrop) backdrop.addEventListener('click', closeDrawer);
+    })();
+  </script>
+
+  <!-- ===== Air Quality fetch ===== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('aq-search-form');
+      const cityInput = document.getElementById('aq-city-input');
+      const loadingEl = document.getElementById('aq-loading');
+      const errorEl = document.getElementById('aq-error');
+      const resultsEl = document.getElementById('aq-results');
+
+      if (!form || !cityInput) return;
+
+      function getAQICategory(pm25) {
+        if (pm25 <= 12) return { label: 'Good', class: 'text-success' };
+        if (pm25 <= 35.4) return { label: 'Moderate', class: 'text-warning' };
+        if (pm25 <= 55.4) return { label: 'Unhealthy for Sensitive', class: 'text-danger' };
+        if (pm25 <= 150.4) return { label: 'Unhealthy', class: 'text-danger' };
+        if (pm25 <= 250.4) return { label: 'Very Unhealthy', class: 'text-danger' };
+        return { label: 'Hazardous', class: 'text-danger' };
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const city = cityInput.value.trim();
+        if (!city) return false;
+
+        loadingEl.classList.remove('d-none');
+        errorEl.classList.add('d-none');
+        resultsEl.classList.add('d-none');
+
+        fetch('/api/air-quality/' + encodeURIComponent(city))
+          .then(function (resp) {
+            if (!resp.ok) {
+              return resp.json().then(function (data) {
+                throw new Error(data.error || 'Failed to fetch data');
+              });
+            }
+            return resp.json();
+          })
+          .then(function (response) {
+            loadingEl.classList.add('d-none');
+            if (!response.success) throw new Error(response.error || 'Unknown error');
+
+            const data = response.data;
+            const current = data.current;
+
+            document.getElementById('aq-city-name').textContent = response.city;
+            if (current && current.time) {
+              document.getElementById('aq-time').textContent = new Date(current.time).toLocaleString();
+            }
+            if (current) {
+              document.getElementById('aq-current-pm25').textContent = current.pm25.toFixed(1);
+              const category = getAQICategory(current.pm25);
+              const categoryEl = document.getElementById('aq-current-category');
+              categoryEl.textContent = current.category;
+              categoryEl.className = 'badge ' + category.class.replace('text-', 'bg-');
+            }
+            const plotImg = document.getElementById('aq-plot-img');
+            plotImg.src = response.plot_url + '?ts=' + Date.now();
+
+            resultsEl.classList.remove('d-none');
+          })
+          .catch(function (err) {
+            loadingEl.classList.add('d-none');
+            errorEl.textContent = 'Error: ' + err.message;
+            errorEl.classList.remove('d-none');
+          });
+
+        return false;
+      });
+    });
+  </script>
+
+  <!-- Chatbot Widget -->
+  <div class="chatbot-container">
+    <button class="chatbot-toggle" id="chatbotToggle">
+      <i class="fas fa-comments"></i>
+      <span class="notification-badge" id="notificationBadge">1</span>
+    </button>
+
+    <div class="chatbot-window" id="chatbotWindow">
+      <div class="chatbot-header">
+        <div class="d-flex align-items-center">
+          <div class="chatbot-avatar">
+            <i class="fas fa-cloud-sun"></i>
+          </div>
+          <div>
+            <h6 class="mb-0">ClimaSense Assistant</h6>
+            <small class="text-white-50">Always here to help</small>
           </div>
         </div>
-    
+        <button class="chatbot-close" id="chatbotClose">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
-    </section>
 
-  </section>
-
-  <section id="sec-4">
-    <h1 class="sec-4-heading"><strong>Weather Prediction</strong></h1>
-    <h4 class="predict-text">Enter your city below to predict the weather of your location for next 5 hours</h4>
-    <form name="city search" id="weatherSearch" action="{{ url_for('prediction') }}" method="post" novalidate>
-      <div class="predict-city input-group rounded mb-3">
-        <input type="search" name="city" class="form-control rounded" placeholder="Enter City Name" aria-label="Search" aria-describedby="search-addon" />
-        <span>
-          <button type="submit" class="btn btn-primary" id="searchCity">Predict</button>
-        </span>
-      </div>
-    </form>
-    {% if predict_status: %}
-    <div class="container-table100">
-      <div class="wrap-table100">
-        <div class="table100">
-          <table>
-            <thead>
-              <tr class="table100-head">
-                <th class="column1">Time</th>
-                <th class="column2">Temperature</th>
-                <th class="column3">Humidity</th>
-              </tr>
-            </thead>
-
-            <tbody class="table-body">
-              <tr>
-                <td class="column1">After 1 hour</td>
-                <td class="column2">{{ temperature_1 }} °C</td>
-                <td class="column3">{{ humidity_1 }} %</td>
-              </tr>
-              <tr>
-                <td class="column1">After 2 hours</td>
-                <td class="column2">{{ temperature_2 }}  °C</td>
-                <td class="column3">{{ humidity_2 }} %</td>
-              </tr>
-              <tr>
-                <td class="column1">After 3 hours</td>
-                <td class="column2">{{ temperature_3 }}  °C</td>
-                <td class="column3">{{ humidity_3 }} %</td>
-              </tr>
-              <tr>
-                <td class="column1">After 4 hours</td>
-                <td class="column2">{{ temperature_4 }}  °C</td>
-                <td class="column3">{{ humidity_4 }} %</td>
-              </tr>
-              <tr>
-                <td class="column1">After 5 hours</td>
-                <td class="column2">{{ temperature_5 }}  °C</td>
-                <td class="column3">{{ humidity_5 }} %</td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="chatbot-messages" id="chatbotMessages">
+        <div class="message bot">
+          <div class="message-content">
+            <p>Hi! 👋 I'm ClimaSense Assistant.<br><br>Ask me:<br>• "What's the weather in Kolkata?"<br>• "Predict weather for Mumbai"<br>• "Temperature in London"</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div>
-      <h3 class="sec-4-content"><strong>Predicted Graphs</strong></h3>
-      <div class="graphs">
-        <canvas id="tlineChart" width="700" height="400"></canvas>
-        <script>
-          var ctx = document.getElementById("tlineChart").getContext("2d");
-          var tlineChart = new Chart (ctx, {
-            type: "line",
-            data: {
-              labels: {{ tlabels | safe }},
-              datasets: [
-                {
-                  label: "TEMPERATURE",
-                  data: {{ tvalues | safe }},
-                  fill: false,
-                  borderColor: "rgb(75, 192, 192)",
-                  backgroundColor: "rgb(75, 192, 192)",
-                  lineTension: 0.1
-                }
-              ]
-            },
-            options: {
-              responsive: false
-            }
-          });
-        </script>
-
-        <canvas id="hlineChart" width="700" height="400"></canvas>
-        <script>
-          var ctx = document.getElementById("hlineChart").getContext("2d");
-          var hlineChart = new Chart (ctx, {
-            type: "line",
-            data: {
-              labels: {{ hlabels | safe }},
-              datasets: [
-                {
-                  label: "HUMIDITY",
-                  data: {{ hvalues | safe }},
-                  fill: false,
-                  borderColor: "rgb(75, 192, 192)",
-                  backgroundColor: "rgb(75, 192, 192)",
-                  lineTension: 0.1
-                }
-              ]
-            },
-            options: {
-              responsive: false,
-            }
-          });
-        </script>
+      <div class="quick-replies" id="quickReplies">
+        <button class="quick-reply-btn" data-message="How to use?">How to use?</button>
+        <button class="quick-reply-btn" data-message="Weather in Mumbai">Weather in Mumbai</button>
+        <button class="quick-reply-btn" data-message="Predict weather">Predict weather</button>
       </div>
-    </div>
-    
-    {% if humidity_1 >= 75: %}
-    <h4 class="sec-4-bottom">According to predicted data, it may rain in the next hour.</h4>
-    {% elif humidity_2 >=75: %}
-    <h4 class="sec-4-bottom">According to predicted data, it may rain in the next 2 hours.</h4>
-    {% elif humidity_3  >= 75: %}
-    <h4 class="sec-4-bottom">According to predicted data, it may rain in the next 3 hours.</h4>
-    {% elif humidity_4  >= 75: %}
-    <h4 class="sec-4-bottom">According to predicted data, it may rain in the next 4 hours.</h4>
-    {% elif humidity_5  >= 75: %}
-    <h4 class="sec-4-bottom">According to predicted data, it may rain in the next 5 hours.</h4>
-    {% else: %}
-    <h4 class="sec-4-bottom">According to predicted data, it may not rain in the next 5 hours.</h4>
-    {% endif %}
-    {% else: %}
-    <h1></h1>
-    {% endif %}
 
-  </section>
-
-</body>
-
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  const form = document.getElementById('aq-search-form');
-  const cityInput = document.getElementById('aq-city-input');
-  const loadingEl = document.getElementById('aq-loading');
-  const errorEl = document.getElementById('aq-error');
-  const resultsEl = document.getElementById('aq-results');
-  
-  // Check if elements exist
-  if (!form || !cityInput) {
-    console.error('AQ form elements not found');
-    return;
-  }
-  
-  function getAQICategory(pm25) {
-    if (pm25 <= 12) return { label: 'Good', class: 'text-success' };
-    if (pm25 <= 35.4) return { label: 'Moderate', class: 'text-warning' };
-    if (pm25 <= 55.4) return { label: 'Unhealthy for Sensitive', class: 'text-danger' };
-    if (pm25 <= 150.4) return { label: 'Unhealthy', class: 'text-danger' };
-    if (pm25 <= 250.4) return { label: 'Very Unhealthy', class: 'text-danger' };
-    return { label: 'Hazardous', class: 'text-danger' };
-  }
-  
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const city = cityInput.value.trim();
-    if (!city) return false;
-    
-    // Show loading, hide others
-    loadingEl.classList.remove('d-none');
-    errorEl.classList.add('d-none');
-    resultsEl.classList.add('d-none');
-    
-    // Fetch air quality data
-    fetch('/api/air-quality/' + encodeURIComponent(city))
-      .then(function(resp){
-        if (!resp.ok) {
-          return resp.json().then(function(data){
-            throw new Error(data.error || 'Failed to fetch data');
-          });
-        }
-        return resp.json();
-      })
-      .then(function(response){
-        loadingEl.classList.add('d-none');
-        
-        if (!response.success) {
-          throw new Error(response.error || 'Unknown error');
-        }
-        
-        const data = response.data;
-        const current = data.current;
-        
-        // Update city name and time
-        document.getElementById('aq-city-name').textContent = response.city;
-        
-        if (current && current.time) {
-          const timeStr = new Date(current.time).toLocaleString();
-          document.getElementById('aq-time').textContent = timeStr;
-        }
-        
-        // Update current PM2.5 and category
-        if (current) {
-          document.getElementById('aq-current-pm25').textContent = current.pm25.toFixed(1);
-          
-          const category = getAQICategory(current.pm25);
-          const categoryEl = document.getElementById('aq-current-category');
-          categoryEl.textContent = current.category;
-          categoryEl.className = 'badge ' + category.class.replace('text-', 'bg-');
-        }
-        
-        // Update plot image with timestamp to avoid cache
-        const plotImg = document.getElementById('aq-plot-img');
-        plotImg.src = response.plot_url + '?ts=' + Date.now();
-        
-        // Show results
-        resultsEl.classList.remove('d-none');
-      })
-      .catch(function(err){
-        loadingEl.classList.add('d-none');
-        errorEl.textContent = 'Error: ' + err.message;
-        errorEl.classList.remove('d-none');
-      });
-    
-    return false;
-  });
-});
-</script>
-
-<!-- Chatbot Widget -->
-<div class="chatbot-container">
-  <!-- Toggle Button -->
-  <button class="chatbot-toggle" id="chatbotToggle">
-    <i class="fas fa-comments"></i>
-    <span class="notification-badge" id="notificationBadge">1</span>
-  </button>
-
-  <!-- Chat Window -->
-  <div class="chatbot-window" id="chatbotWindow">
-    <!-- Header -->
-    <div class="chatbot-header">
-      <div class="d-flex align-items-center">
-        <div class="chatbot-avatar">
-          <i class="fas fa-cloud-sun"></i>
-        </div>
-        <div>
-          <h6 class="mb-0">ClimaSense Assistant</h6>
-          <small class="text-white-50">Always here to help</small>
-        </div>
+      <div class="chatbot-input-area">
+        <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Type your message...">
+        <button class="chatbot-send" id="chatbotSend">
+          <i class="fas fa-paper-plane"></i>
+        </button>
       </div>
-      <button class="chatbot-close" id="chatbotClose">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-
-    <!-- Messages Area -->
-    <div class="chatbot-messages" id="chatbotMessages">
-      <!-- Welcome Message -->
-      <div class="message bot">
-        <div class="message-content">
-          <p>Hi! 👋 I'm ClimaSense Assistant.<br><br>Ask me:<br>• "What's the weather in Kolkata?"<br>• "Predict weather for Mumbai"<br>• "Temperature in London"</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Replies -->
-    <div class="quick-replies" id="quickReplies">
-      <button class="quick-reply-btn" data-message="How to use?">How to use?</button>
-      <button class="quick-reply-btn" data-message="Weather in Mumbai">Weather in Mumbai</button>
-      <button class="quick-reply-btn" data-message="Predict weather">Predict weather</button>
-    </div>
-
-    <!-- Input Area -->
-    <div class="chatbot-input-area">
-      <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Type your message...">
-      <button class="chatbot-send" id="chatbotSend">
-        <i class="fas fa-paper-plane"></i>
-      </button>
     </div>
   </div>
-</div>
 
-<!-- Chatbot JavaScript -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Elements
-  const chatbotToggle = document.getElementById('chatbotToggle');
-  const chatbotClose = document.getElementById('chatbotClose');
-  const chatbotWindow = document.getElementById('chatbotWindow');
-  const chatbotMessages = document.getElementById('chatbotMessages');
-  const chatbotInput = document.getElementById('chatbotInput');
-  const chatbotSend = document.getElementById('chatbotSend');
-  const quickReplies = document.getElementById('quickReplies');
-  const notificationBadge = document.getElementById('notificationBadge');
+  <!-- Chatbot JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const chatbotToggle = document.getElementById('chatbotToggle');
+      const chatbotClose = document.getElementById('chatbotClose');
+      const chatbotWindow = document.getElementById('chatbotWindow');
+      const chatbotMessages = document.getElementById('chatbotMessages');
+      const chatbotInput = document.getElementById('chatbotInput');
+      const chatbotSend = document.getElementById('chatbotSend');
+      const quickReplies = document.getElementById('quickReplies');
+      const notificationBadge = document.getElementById('notificationBadge');
 
-  let isOpen = false;
+      let isOpen = false;
 
-  // Toggle chat window
-  chatbotToggle.addEventListener('click', function() {
-    isOpen = !isOpen;
-    chatbotWindow.style.display = isOpen ? 'flex' : 'none';
-    notificationBadge.style.display = 'none';
-    
-    if (isOpen) {
-      chatbotInput.focus();
-    }
-  });
-
-  // Close chat window
-  chatbotClose.addEventListener('click', function() {
-    isOpen = false;
-    chatbotWindow.style.display = 'none';
-  });
-
-  // Send message function
-  function sendMessage(message) {
-    if (!message.trim()) return;
-
-    // Add user message to chat
-    addMessage(message, 'user');
-    chatbotInput.value = '';
-
-    // Show typing indicator
-    showTypingIndicator();
-
-    // Send to backend
-    fetch('/chatbot', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message: message })
-    })
-    .then(response => response.json())
-    .then(data => {
-      // Remove typing indicator
-      removeTypingIndicator();
-
-      if (data.success) {
-        // Add bot response
-        addMessage(data.response, 'bot');
-
-        // Update quick replies
-        if (data.quick_replies && data.quick_replies.length > 0) {
-          updateQuickReplies(data.quick_replies);
-        }
-      } else {
-        addMessage("Sorry, I'm having trouble right now. Please try again!", 'bot');
-      }
-    })
-    .catch(error => {
-      removeTypingIndicator();
-      addMessage("Oops! Something went wrong. Please check your connection.", 'bot');
-      console.error('Chatbot error:', error);
-    });
-  }
-
-  // Add message to chat
-  function addMessage(text, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${sender}`;
-    
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
-    
-    const textP = document.createElement('p');
-    textP.innerHTML = text.replace(/\n/g, '<br>');
-    
-    contentDiv.appendChild(textP);
-    messageDiv.appendChild(contentDiv);
-    chatbotMessages.appendChild(messageDiv);
-    
-    // Scroll to bottom
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-  }
-
-  // Show typing indicator
-  function showTypingIndicator() {
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'message bot typing-message';
-    typingDiv.id = 'typingIndicator';
-    
-    const indicatorDiv = document.createElement('div');
-    indicatorDiv.className = 'typing-indicator';
-    indicatorDiv.innerHTML = '<span></span><span></span><span></span>';
-    
-    typingDiv.appendChild(indicatorDiv);
-    chatbotMessages.appendChild(typingDiv);
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-  }
-
-  // Remove typing indicator
-  function removeTypingIndicator() {
-    const typingIndicator = document.getElementById('typingIndicator');
-    if (typingIndicator) {
-      typingIndicator.remove();
-    }
-  }
-
-  // Update quick replies
-  function updateQuickReplies(replies) {
-    quickReplies.innerHTML = '';
-    replies.forEach(reply => {
-      const button = document.createElement('button');
-      button.className = 'quick-reply-btn';
-      button.textContent = reply;
-      button.setAttribute('data-message', reply);
-      button.addEventListener('click', function() {
-        sendMessage(this.getAttribute('data-message'));
+      chatbotToggle.addEventListener('click', function () {
+        isOpen = !isOpen;
+        chatbotWindow.style.display = isOpen ? 'flex' : 'none';
+        notificationBadge.style.display = 'none';
+        if (isOpen) chatbotInput.focus();
       });
-      quickReplies.appendChild(button);
+
+      chatbotClose.addEventListener('click', function () {
+        isOpen = false;
+        chatbotWindow.style.display = 'none';
+      });
+
+      function sendMessage(message) {
+        if (!message.trim()) return;
+        addMessage(message, 'user');
+        chatbotInput.value = '';
+        showTypingIndicator();
+
+        fetch('/chatbot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: message })
+        })
+          .then(response => response.json())
+          .then(data => {
+            removeTypingIndicator();
+            if (data.success) {
+              addMessage(data.response, 'bot');
+              if (data.quick_replies && data.quick_replies.length > 0) {
+                updateQuickReplies(data.quick_replies);
+              }
+            } else {
+              addMessage("Sorry, I'm having trouble right now. Please try again!", 'bot');
+            }
+          })
+          .catch(error => {
+            removeTypingIndicator();
+            addMessage("Oops! Something went wrong. Please check your connection.", 'bot');
+            console.error('Chatbot error:', error);
+          });
+      }
+
+      function addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        const textP = document.createElement('p');
+        textP.innerHTML = text.replace(/\n/g, '<br>');
+        contentDiv.appendChild(textP);
+        messageDiv.appendChild(contentDiv);
+        chatbotMessages.appendChild(messageDiv);
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+      }
+
+      function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot typing-message';
+        typingDiv.id = 'typingIndicator';
+        const indicatorDiv = document.createElement('div');
+        indicatorDiv.className = 'typing-indicator';
+        indicatorDiv.innerHTML = '<span></span><span></span><span></span>';
+        typingDiv.appendChild(indicatorDiv);
+        chatbotMessages.appendChild(typingDiv);
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+      }
+
+      function removeTypingIndicator() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) typingIndicator.remove();
+      }
+
+      function updateQuickReplies(replies) {
+        quickReplies.innerHTML = '';
+        replies.forEach(reply => {
+          const button = document.createElement('button');
+          button.className = 'quick-reply-btn';
+          button.textContent = reply;
+          button.setAttribute('data-message', reply);
+          button.addEventListener('click', function () {
+            sendMessage(this.getAttribute('data-message'));
+          });
+          quickReplies.appendChild(button);
+        });
+      }
+
+      chatbotSend.addEventListener('click', function () {
+        sendMessage(chatbotInput.value);
+      });
+
+      chatbotInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') sendMessage(chatbotInput.value);
+      });
+
+      document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('quick-reply-btn')) {
+          sendMessage(e.target.getAttribute('data-message'));
+        }
+      });
+
+      setTimeout(function () {
+        if (!isOpen && !sessionStorage.getItem('chatbotSeen')) {
+          notificationBadge.style.display = 'flex';
+          sessionStorage.setItem('chatbotSeen', 'true');
+        }
+      }, 3000);
     });
-  }
+  </script>
 
-  // Send button click
-  chatbotSend.addEventListener('click', function() {
-    sendMessage(chatbotInput.value);
-  });
-
-  // Enter key to send
-  chatbotInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      sendMessage(chatbotInput.value);
-    }
-  });
-
-  // Quick reply buttons
-  document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('quick-reply-btn')) {
-      sendMessage(e.target.getAttribute('data-message'));
-    }
-  });
-
-  // Show notification after 3 seconds (first visit)
-  setTimeout(function() {
-    if (!isOpen && !sessionStorage.getItem('chatbotSeen')) {
-      notificationBadge.style.display = 'flex';
-      sessionStorage.setItem('chatbotSeen', 'true');
-    }
-  }, 3000);
-});
-</script>
+</body>
 
 </html>

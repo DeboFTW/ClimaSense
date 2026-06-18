@@ -31,10 +31,21 @@ pmdarima>=2.0.4                 # Auto ARIMA for time series forecasting
 statsmodels>=0.14.0             # Statistical models for ARIMA predictions
 scikit-learn>=1.3.0             # Machine learning utilities
 
+# Deep Learning (LSTM)
+tensorflow>=2.15.0              # Deep learning framework for LSTM models
+keras>=3.0.0                    # High-level neural networks API
+
 # ----------------
 # Visualization
 # ----------------
 matplotlib>=3.7.0               # Plotting library for charts
+
+# ----------------
+# Natural Language Processing
+# ----------------
+spacy>=3.7.0                    # NLP library for intent detection and entity recognition
+# After installing spaCy, download the English model:
+# python -m spacy download en_core_web_sm
 
 # ----------------
 # Production Server

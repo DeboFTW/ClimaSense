@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClimaSense — Climate Analytics</title>
+  <link rel="icon" href="../static/weather.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="../static/css/climate.css">
+  <link rel="stylesheet" href="../static/css/sidebar.css">
+  <script src="https://kit.fontawesome.com/9df87047e7.js" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="cs-shell">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="cs-sidebar" id="csSidebar">
+      <div class="cs-brand">
+        <i class="fas fa-cloud-sun"></i>
+        <div>
+          <div class="cs-brand-text">ClimaSense</div>
+          <div class="cs-brand-sub">Weather &amp; Climate</div>
+        </div>
+      </div>
+
+      <nav class="cs-nav">
+        <a class="cs-nav-item" href="{{ url_for('home') }}#current">
+          <i class="fas fa-cloud-sun"></i> Current Weather
+        </a>
+        <a class="cs-nav-item" href="{{ url_for('home') }}#prediction">
+          <i class="fas fa-wand-magic-sparkles"></i> Weather Prediction
+        </a>
+        <a class="cs-nav-item" href="{{ url_for('home') }}#aqi">
+          <i class="fas fa-wind"></i> Air Quality Index
+        </a>
+        <a class="cs-nav-item active" href="{{ url_for('climate') }}">
+          <i class="fas fa-chart-line"></i> Climate Analytics
+        </a>
+      </nav>
+
+      <div class="cs-sidebar-footer">
+        ClimaSense &middot; Hybrid ML
+      </div>
+    </aside>
+
+    <div class="cs-backdrop" id="csBackdrop"></div>
+
+    <div class="cs-main">
+
+      <!-- Mobile topbar -->
+      <div class="cs-topbar">
+        <button type="button" class="cs-burger" id="csBurger" aria-label="Open menu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <span class="cs-topbar-title">Climate Analytics</span>
+      </div>
+
+  <!-- Hero -->
+  <header class="climate-hero">
+    <h1><i class="fas fa-chart-line"></i> Climate Analytics</h1>
+    <p>Temperature &amp; rainfall trends across 96 Indian cities (2020–2025)</p>
+  </header>
+
+  {% if not climate_available %}
+  <div class="climate-empty">
+    <i class="fas fa-database"></i>
+    <h2>No climate data cached yet</h2>
+    <p>Run the precompute script to generate the analytics cache:</p>
+    <code>python precompute_climate.py popular_cities_weather.csv</code>
+  </div>
+  {% else %}
+
+  <main class="climate-main">
+
+    <!-- City selector -->
+    <form class="city-picker" method="get" action="{{ url_for('climate') }}">
+      <label for="citySelect"><i class="fas fa-location-dot"></i> City</label>
+      <select name="city" id="citySelect" onchange="this.form.submit()">
+        {% for c in cities %}
+        <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit">View</button></noscript>
+    </form>
+
+    <!-- Headline metric cards -->
+    <section class="metric-row">
+      <div class="c-card metric">
+        <div class="metric-icon"><i class="fas fa-temperature-half"></i></div>
+        <div class="metric-label">Mean Temperature</div>
+        <div class="metric-value">{{ metrics.mean_temp }}<span>°C</span></div>
+        <div class="metric-sub">{{ metrics.year_range }}</div>
+      </div>
+
+      <div class="c-card metric">
+        <div class="metric-icon"><i class="fas fa-arrow-trend-up"></i></div>
+        <div class="metric-label">Warming Trend</div>
+        <div class="metric-value">
+          {% if metrics.warming is not none and metrics.warming >= 0 %}+{% endif %}{{ metrics.warming }}<span>°C</span>
+        </div>
+        <div class="metric-sub">{{ year_labels[0] }} → {{ year_labels[-1] }}</div>
+      </div>
+
+      <div class="c-card metric">
+        <div class="metric-icon"><i class="fas fa-fire"></i></div>
+        <div class="metric-label">Record High / Low</div>
+        <div class="metric-value">{{ metrics.max_temp }}<span>° / {{ metrics.min_temp }}°</span></div>
+        <div class="metric-sub">Hottest: {{ metrics.hottest_month }} · Coldest: {{ metrics.coldest_month }}</div>
+      </div>
+
+      <div class="c-card metric">
+        <div class="metric-icon"><i class="fas fa-cloud-showers-heavy"></i></div>
+        <div class="metric-label">Wettest Month</div>
+        <div class="metric-value">{{ metrics.wettest_month }}</div>
+        <div class="metric-sub">{{ metrics.records }} monthly records</div>
+      </div>
+    </section>
+
+    <!-- Monthly temperature range + precipitation -->
+    <section class="c-card chart-card">
+      <div class="chart-head">
+        <h3><i class="fas fa-calendar-days"></i> Monthly Climatology — {{ selected_city }}</h3>
+        <p>Average temperature with min/max range and monthly precipitation</p>
+      </div>
+      <canvas id="monthlyChart" height="110"></canvas>
+    </section>
+
+    <div class="chart-grid">
+      <!-- Yearly warming trend -->
+      <section class="c-card chart-card">
+        <div class="chart-head">
+          <h3><i class="fas fa-arrow-trend-up"></i> Annual Temperature Trend</h3>
+          <p>Mean temperature per year</p>
+        </div>
+        <canvas id="yearlyChart" height="200"></canvas>
+      </section>
+
+      <!-- Temperature anomaly -->
+      <section class="c-card chart-card">
+        <div class="chart-head">
+          <h3><i class="fas fa-wave-square"></i> Temperature Anomaly</h3>
+          <p>Deviation from {{ year_labels[0] }} baseline</p>
+        </div>
+        <canvas id="anomalyChart" height="200"></canvas>
+      </section>
+    </div>
+
+    <!-- Annual precipitation -->
+    <section class="c-card chart-card">
+      <div class="chart-head">
+        <h3><i class="fas fa-chart-column"></i> Annual Precipitation</h3>
+        <p>Total rainfall per year (mm)</p>
+      </div>
+      <canvas id="precipChart" height="90"></canvas>
+    </section>
+
+  </main>
+
+  <!-- Chart rendering -->
+  <script>
+    Chart.defaults.font.family = "'Nunito', sans-serif";
+    Chart.defaults.color = "#555";
+
+    const monthLabels = {{ month_labels | safe }};
+    const monthTemps = {{ month_temps | safe }};
+    const monthTmin = {{ month_tmin | safe }};
+    const monthTmax = {{ month_tmax | safe }};
+    const monthPrecip = {{ month_precip | safe }};
+    const yearLabels = {{ year_labels | safe }};
+    const yearTemps = {{ year_temps | safe }};
+    const yearAnomalies = {{ year_anomalies | safe }};
+    const yearPrecip = {{ year_precip | safe }};
+
+    const purple = '#667eea';
+    const violet = '#764ba2';
+    const amber = '#f59e0b';
+
+    // Monthly combo: temp range band (tmin/tmax) + avg line + precip bars
+    new Chart(document.getElementById('monthlyChart'), {
+      data: {
+        labels: monthLabels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'Precipitation (mm)',
+            data: monthPrecip,
+            backgroundColor: 'rgba(102, 126, 234, 0.30)',
+            borderColor: purple,
+            borderWidth: 1,
+            yAxisID: 'yPrecip',
+            borderRadius: 6,
+            order: 3,
+          },
+          {
+            type: 'line',
+            label: 'Max Temp (°C)',
+            data: monthTmax,
+            borderColor: 'rgba(239, 68, 68, 0.5)',
+            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+            tension: 0.4, pointRadius: 0, fill: '+1',
+            yAxisID: 'yTemp', order: 2,
+          },
+          {
+            type: 'line',
+            label: 'Min Temp (°C)',
+            data: monthTmin,
+            borderColor: 'rgba(59, 130, 246, 0.5)',
+            tension: 0.4, pointRadius: 0, fill: false,
+            yAxisID: 'yTemp', order: 2,
+          },
+          {
+            type: 'line',
+            label: 'Avg Temp (°C)',
+            data: monthTemps,
+            borderColor: amber,
+            backgroundColor: amber,
+            tension: 0.4, pointRadius: 4, pointHoverRadius: 6,
+            yAxisID: 'yTemp', order: 1,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          yTemp: {
+            type: 'linear', position: 'left',
+            title: { display: true, text: '°C' },
+            grid: { color: 'rgba(0,0,0,0.05)' }
+          },
+          yPrecip: {
+            type: 'linear', position: 'right', beginAtZero: true,
+            title: { display: true, text: 'mm' },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+
+    // Yearly temperature trend
+    new Chart(document.getElementById('yearlyChart'), {
+      type: 'line',
+      data: {
+        labels: yearLabels,
+        datasets: [{
+          label: 'Mean Temp (°C)',
+          data: yearTemps,
+          borderColor: purple,
+          backgroundColor: 'rgba(102, 126, 234, 0.15)',
+          fill: true, tension: 0.4,
+          pointRadius: 5, pointBackgroundColor: violet,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { grid: { color: 'rgba(0,0,0,0.05)' } } }
+      }
+    });
+
+    // Anomaly bars (red above baseline, blue below)
+    new Chart(document.getElementById('anomalyChart'), {
+      type: 'bar',
+      data: {
+        labels: yearLabels,
+        datasets: [{
+          label: 'Anomaly (°C)',
+          data: yearAnomalies,
+          backgroundColor: yearAnomalies.map(v => v >= 0 ? 'rgba(239,68,68,0.7)' : 'rgba(59,130,246,0.7)'),
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { grid: { color: 'rgba(0,0,0,0.05)' } } }
+      }
+    });
+
+    // Annual precipitation bars
+    new Chart(document.getElementById('precipChart'), {
+      type: 'bar',
+      data: {
+        labels: yearLabels,
+        datasets: [{
+          label: 'Precip (mm)',
+          data: yearPrecip,
+          backgroundColor: 'rgba(118, 75, 162, 0.6)',
+          borderColor: violet, borderWidth: 1, borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } } }
+      }
+    });
+  </script>
+
+  {% endif %}
+
+    </div><!-- /.cs-main -->
+  </div><!-- /.cs-shell -->
+
+  <!-- Mobile drawer toggle -->
+  <script>
+    (function () {
+      var sidebar = document.getElementById('csSidebar');
+      var backdrop = document.getElementById('csBackdrop');
+      var burger = document.getElementById('csBurger');
+      if (burger) burger.addEventListener('click', function () {
+        sidebar.classList.add('open');
+        backdrop.classList.add('show');
+      });
+      if (backdrop) backdrop.addEventListener('click', function () {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('show');
+      });
+    })();
+  </script>
+
+</body>
+
+</html>

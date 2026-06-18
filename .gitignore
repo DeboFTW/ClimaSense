@@ -11,3 +11,12 @@ dist/
 build/
 *.log
 .DS_Store
+
+# Database files
+weather_data.db
+weather_data.db-journal
+*.db
+*.db-journal
+
+# Virtual environment
+.venv/

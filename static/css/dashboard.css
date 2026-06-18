@@ -1,0 +1,460 @@
+/* Model Performance Dashboard Styles */
+.dashboard-section {
+    padding: 80px 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.dashboard-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.dashboard-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    color: #333;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.metric-icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.metric-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #667eea;
+    margin: 10px 0;
+}
+
+.metric-description {
+    font-size: 0.85rem;
+    color: #888;
+    line-height: 1.5;
+}
+
+.model-comparison {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.model-comparison h3 {
+    color: #333;
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.models-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.model-box {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.model-box:hover {
+    border-left-width: 8px;
+    transform: translateX(5px);
+}
+
+.model-box.arima {
+    border-left-color: #667eea;
+}
+
+.model-box.lstm {
+    border-left-color: #764ba2;
+}
+
+.model-box.ensemble {
+    border-left-color: #f093fb;
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.model-box h4 {
+    color: #333;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.model-box h4 i {
+    margin-right: 10px;
+    color: #667eea;
+}
+
+.model-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    color: #555;
+}
+
+.model-stat:last-child {
+    border-bottom: none;
+}
+
+.model-stat .label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.model-stat .value {
+    font-weight: 700;
+    color: #667eea;
+}
+
+.confidence-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    color: #333;
+}
+
+.confidence-section h3 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.confidence-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.confidence-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.confidence-details {
+    text-align: center;
+    padding: 15px;
+}
+
+.confidence-details p {
+    font-size: 1rem;
+    color: #666;
+    margin: 5px 0;
+}
+
+/* Weather Alerts Styles */
+.alerts-section {
+    padding: 60px 40px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.alerts-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.alerts-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 40px;
+}
+
+.alerts-header h2 {
+    font-size: 2.3rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.alerts-header p {
+    font-size: 1rem;
+    opacity: 0.95;
+}
+
+.alerts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+.alert-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.alert-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+}
+
+.alert-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+
+.alert-card.warning::before {
+    background: linear-gradient(90deg, #ff9800 0%, #ff5722 100%);
+}
+
+.alert-card.danger::before {
+    background: linear-gradient(90deg, #f44336 0%, #d32f2f 100%);
+}
+
+.alert-card.info::before {
+    background: linear-gradient(90deg, #2196f3 0%, #1976d2 100%);
+}
+
+.alert-card.success::before {
+    background: linear-gradient(90deg, #4caf50 0%, #388e3c 100%);
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.alert-icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(240, 147, 251, 0.1);
+}
+
+.alert-card.warning .alert-icon {
+    background: rgba(255, 152, 0, 0.1);
+    color: #ff9800;
+}
+
+.alert-card.danger .alert-icon {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+}
+
+.alert-card.info .alert-icon {
+    background: rgba(33, 150, 243, 0.1);
+    color: #2196f3;
+}
+
+.alert-card.success .alert-icon {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+}
+
+.alert-badge {
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.alert-badge.warning {
+    background: #fff3e0;
+    color: #ff9800;
+}
+
+.alert-badge.danger {
+    background: #ffebee;
+    color: #f44336;
+}
+
+.alert-badge.info {
+    background: #e3f2fd;
+    color: #2196f3;
+}
+
+.alert-badge.success {
+    background: #e8f5e9;
+    color: #4caf50;
+}
+
+.alert-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.alert-message {
+    font-size: 1rem;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.alert-time {
+    font-size: 0.85rem;
+    color: #999;
+    display: flex;
+    align-items: center;
+}
+
+.alert-time i {
+    margin-right: 5px;
+}
+
+.no-alerts {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.no-alerts i {
+    font-size: 4rem;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.no-alerts h3 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.no-alerts p {
+    color: #666;
+    font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-section, .alerts-section {
+        padding: 40px 20px;
+    }
+    
+    .dashboard-header h2, .alerts-header h2 {
+        font-size: 1.8rem;
+    }
+    
+    .metrics-grid, .alerts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .models-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-value {
+        font-size: 1.8rem;
+    }
+}
+
+/* Animation for new alerts */
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-card {
+    animation: slideInDown 0.5s ease-out;
+}
+
+/* Pulse animation for critical alerts */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    50% {
+        box-shadow: 0 15px 40px rgba(245, 87, 108, 0.4);
+    }
+}
+
+.alert-card.danger {
+    animation: pulse 2s infinite;
+}

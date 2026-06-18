@@ -1,0 +1,223 @@
+/* ============================================
+   ClimaSense — Sidebar tab layout
+   ============================================ */
+
+:root {
+  --cs-purple: #667eea;
+  --cs-violet: #764ba2;
+  --cs-sidebar-w: 260px;
+}
+
+.cs-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---- Sidebar ---- */
+.cs-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--cs-sidebar-w);
+  height: 100vh;
+  background: linear-gradient(160deg, #5566d6 0%, #6a3f9c 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  z-index: 1000;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+  transition: transform 0.3s ease;
+}
+
+.cs-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 18px;
+}
+
+.cs-brand i {
+  font-size: 1.6rem;
+}
+
+.cs-brand .cs-brand-text {
+  font-weight: 800;
+  font-size: 1.15rem;
+  line-height: 1.1;
+}
+
+.cs-brand .cs-brand-sub {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.cs-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.cs-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.cs-nav-item i {
+  width: 22px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.cs-nav-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.cs-nav-item.active {
+  background: #fff;
+  color: var(--cs-violet);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.cs-sidebar-footer {
+  font-size: 0.72rem;
+  opacity: 0.7;
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ---- Main content area ---- */
+.cs-main {
+  margin-left: var(--cs-sidebar-w);
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- Tab panels ---- */
+.cs-panel {
+  display: none;
+  animation: cs-fade 0.35s ease;
+}
+
+.cs-panel.active {
+  display: block;
+}
+
+@keyframes cs-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Mobile topbar + toggle ---- */
+.cs-topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, var(--cs-purple), var(--cs-violet));
+  color: #fff;
+}
+
+.cs-topbar .cs-burger {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.cs-topbar .cs-topbar-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.cs-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 999;
+}
+
+.cs-backdrop.show {
+  display: block;
+}
+
+@media (max-width: 992px) {
+  .cs-sidebar {
+    transform: translateX(-100%);
+  }
+  .cs-sidebar.open {
+    transform: translateX(0);
+  }
+  .cs-main {
+    margin-left: 0;
+  }
+  .cs-topbar {
+    display: flex;
+  }
+}
+
+/* ---- Air Quality panel ---- */
+.aqi-section {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0e7ff 0%, #f4f5fb 100%);
+}
+
+.aqi-heading {
+  font-weight: 800;
+  color: var(--cs-violet);
+}
+
+.aqi-heading i {
+  color: var(--cs-purple);
+}
+
+.aqi-sub {
+  color: #666;
+}
+
+.aqi-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.aqi-pm25 {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--cs-purple);
+}
+
+.aqi-unit {
+  font-size: 0.95rem;
+  color: #888;
+  margin-left: 6px;
+}

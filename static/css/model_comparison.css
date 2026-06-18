@@ -1,0 +1,261 @@
+/* Model Comparison Styles */
+
+.model-comparison-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 80px 0;
+    margin-top: 60px;
+    margin-bottom: 0;
+}
+
+.model-comparison-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 30px;
+}
+
+.section-title {
+    color: white;
+    text-align: center;
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.section-subtitle {
+    color: rgba(255, 255, 255, 0.95);
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 50px;
+    font-weight: 300;
+}
+
+.model-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.model-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.model-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.model-card.ensemble-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: 3px solid #fff;
+}
+
+.model-card.ensemble-card .model-title,
+.model-card.ensemble-card .model-description,
+.model-card.ensemble-card .metric-label {
+    color: white;
+}
+
+.model-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.model-icon {
+    font-size: 2.5rem;
+    margin-right: 15px;
+}
+
+.model-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+.model-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.badge-primary {
+    background: #667eea;
+    color: white;
+}
+
+.badge-success {
+    background: #4ade80;
+    color: white;
+}
+
+.badge-warning {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.model-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.model-metrics {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.metric {
+    flex: 1;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.ensemble-card .metric {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.ensemble-card .metric-value {
+    color: white;
+}
+
+.comparison-chart-container {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+}
+
+.chart-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.confidence-interval-info {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 30px;
+}
+
+.confidence-interval-info h4 {
+    color: white;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+.confidence-interval-info ul {
+    color: rgba(255, 255, 255, 0.9);
+    list-style-position: inside;
+}
+
+.model-info-panel {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+    margin-top: 30px;
+}
+
+.model-info-panel h4 {
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.model-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.info-label {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .model-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-title {
+        font-size: 1.8rem;
+    }
+    
+    .comparison-chart-container {
+        padding: 20px;
+    }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.model-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.model-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.model-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.model-card:nth-child(3) {
+    animation-delay: 0.3s;
+}

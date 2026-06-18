@@ -1,0 +1,411 @@
+/* ============================================
+   ClimaSense — Panel aesthetics
+   Overrides legacy styles.css rules that were
+   built for full-width pages.
+   ============================================ */
+
+/* ---- Ensure every panel fills the full cs-main area ---- */
+.cs-panel {
+  min-height: 100vh;
+  width: 100%;
+  display: none;
+}
+.cs-panel.active {
+  display: block;
+}
+
+/* ================================================================
+   CURRENT WEATHER PANEL
+   ================================================================ */
+#panel-current #sec-3 {
+  min-height: 100vh;
+}
+#panel-current .sec-3-heading {
+  color: #fff;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 4px 18px rgba(0,0,0,.4);
+}
+#panel-current .card {
+  border: none;
+  border-radius: 18px;
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 20px 50px rgba(0,0,0,.28);
+}
+
+/* ================================================================
+   WEATHER PREDICTION PANEL
+   Full-viewport background image with dark overlay.
+   All legacy #sec-4 / .predict-city rules neutralised here.
+   ================================================================ */
+
+#panel-prediction {
+  background:
+    linear-gradient(
+      150deg,
+      rgba(10, 8, 40, 0.82) 0%,
+      rgba(45, 25, 110, 0.78) 50%,
+      rgba(20, 20, 60, 0.85) 100%
+    ),
+    url("../prediction_bg.webp") center center / cover no-repeat fixed;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+/* aurora glow layer */
+#panel-prediction::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(700px circle at 15% 25%, rgba(56,189,248,.22), transparent 55%),
+    radial-gradient(600px circle at 85% 20%, rgba(244,114,182,.18), transparent 55%),
+    radial-gradient(800px circle at 50% 90%, rgba(250,204,21,.14), transparent 50%);
+}
+
+/* ---- Kill every conflicting legacy rule ---- */
+#panel-prediction #sec-4 {
+  all: unset !important;
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* ---- Inner centering wrapper ---- */
+#panel-prediction .pred-inner {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 60px 24px 80px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+#panel-prediction .sec-4-heading {
+  all: unset !important;
+  display: block;
+  color: #fff !important;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800 !important;
+  font-size: 2.6rem;
+  text-align: center;
+  padding: 0 0 8px !important;
+  margin: 0 0 8px !important;
+  text-shadow: 0 4px 22px rgba(0,0,0,.55);
+}
+
+#panel-prediction .predict-text {
+  all: unset !important;
+  display: block;
+  color: rgba(255,255,255,.9) !important;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.05rem;
+  text-align: center;
+  margin: 0 0 32px !important;
+}
+
+/* ---- Glass search form ---- */
+#panel-prediction form#weatherSearchPredict {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 40px !important;
+  padding: 0 !important;
+}
+
+#panel-prediction .predict-city {
+  all: unset !important;
+  display: flex !important;
+  align-items: center;
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255,255,255,.15) !important;
+  border: 1px solid rgba(255,255,255,.38) !important;
+  border-radius: 16px !important;
+  padding: 8px !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 14px 44px rgba(0,0,0,.38);
+  gap: 8px;
+}
+
+#panel-prediction .predict-city .form-control {
+  all: unset !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #fff !important;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 8px 12px;
+}
+
+#panel-prediction .predict-city .form-control::placeholder {
+  color: rgba(255,255,255,.7) !important;
+}
+
+#panel-prediction .predict-city .btn {
+  all: unset !important;
+  flex-shrink: 0;
+  background: #fff !important;
+  color: #3b0f8c !important;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 10px 22px;
+  border-radius: 12px !important;
+  cursor: pointer;
+  transition: background .2s;
+}
+#panel-prediction .predict-city .btn:hover {
+  background: #ece8ff !important;
+}
+
+/* ---- Results table ---- */
+#panel-prediction .container-table100 {
+  display: flex !important;
+  justify-content: center !important;
+  padding: 0 16px 0 !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+#panel-prediction .wrap-table100 {
+  width: 100%;
+  max-width: 640px;
+}
+#panel-prediction table {
+  background: rgba(255,255,255,.97) !important;
+  border-radius: 18px !important;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,.4);
+  width: 100%;
+}
+#panel-prediction table thead tr {
+  background: linear-gradient(135deg, #3b0f8c, #764ba2) !important;
+}
+#panel-prediction .column1,
+#panel-prediction .column2,
+#panel-prediction .column3 {
+  width: 33.33% !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* ---- Charts section heading ---- */
+#panel-prediction .sec-4-content {
+  all: unset !important;
+  display: block;
+  color: #fff !important;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 1.6rem;
+  text-align: center;
+  padding: 48px 0 0 !important;
+  text-shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+
+/* ---- Chart cards ---- */
+#panel-prediction .graphs {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 0 24px 60px;
+}
+#panel-prediction .graph-box {
+  background: rgba(255,255,255,.97);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.35);
+  flex: 1 1 360px;
+  max-width: 480px;
+  height: 280px;
+}
+#panel-prediction .graph-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ---- Rain message banner ---- */
+#panel-prediction .sec-4-bottom {
+  all: unset !important;
+  display: block;
+  color: #fff !important;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  text-align: center;
+  margin: 32px auto 0 !important;
+  max-width: 640px;
+  padding: 16px 22px !important;
+  background: rgba(255,255,255,.12) !important;
+  border: 1px solid rgba(255,255,255,.28) !important;
+  border-radius: 14px !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+
+/* ================================================================
+   AIR QUALITY INDEX PANEL
+   ================================================================ */
+#panel-aqi .aqi-section {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    linear-gradient(
+      150deg,
+      rgba(2, 78, 70, 0.88) 0%,
+      rgba(5, 90, 145, 0.85) 60%,
+      rgba(15, 25, 80, 0.90) 100%
+    ),
+    url("../clouds-3.jpg") center center / cover no-repeat fixed;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+#panel-aqi .aqi-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(600px circle at 15% 70%, rgba(45,212,191,.28), transparent 55%),
+    radial-gradient(700px circle at 88% 30%, rgba(96,165,250,.24), transparent 55%);
+}
+
+/* ---- Centered inner content ---- */
+#panel-aqi .aqi-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 70px 28px 80px;
+  text-align: center;
+}
+
+#panel-aqi .aqi-head h1 {
+  color: #fff;
+  font-weight: 800;
+  font-size: 2.4rem;
+  text-shadow: 0 4px 20px rgba(0,0,0,.45);
+  margin-bottom: 8px;
+}
+#panel-aqi .aqi-head h1 i { color: #a7f3d0; }
+#panel-aqi .aqi-head p {
+  color: rgba(255,255,255,.88);
+  font-size: 1.05rem;
+  margin-bottom: 36px;
+}
+
+/* ---- Glass search form ---- */
+#panel-aqi .aqi-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.38);
+  border-radius: 16px;
+  padding: 8px 10px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 14px 44px rgba(0,0,0,.3);
+  margin-bottom: 32px;
+}
+
+#panel-aqi .aqi-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 8px 12px;
+  min-width: 0;
+}
+#panel-aqi .aqi-input::placeholder { color: rgba(255,255,255,.7); }
+
+#panel-aqi .aqi-btn {
+  background: #fff;
+  color: #0f766e;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 22px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+#panel-aqi .aqi-btn:hover { background: #ccfbf1; }
+
+/* ---- Loading / error ---- */
+#panel-aqi .aqi-loading {
+  color: rgba(255,255,255,.9);
+  text-align: center;
+  margin: 24px 0;
+}
+#panel-aqi .aqi-loading .spinner-border {
+  color: #fff;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+#panel-aqi .aqi-error {
+  background: rgba(254,202,202,.9);
+  color: #7f1d1d;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  text-align: left;
+  font-weight: 600;
+}
+
+/* ---- Result cards ---- */
+#panel-aqi .aqi-result-card {
+  background: rgba(255,255,255,.97);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.3);
+  text-align: center;
+}
+#panel-aqi .aqi-number-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin: 16px 0 8px;
+}
+#panel-aqi .aqi-pm25 {
+  font-size: 3.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0d9488, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+#panel-aqi .aqi-unit { color: #64748b; font-size: 1rem; }
+#panel-aqi .aqi-hint {
+  color: rgba(255,255,255,.7);
+  font-size: 0.85rem;
+  margin-top: 20px;
+}
+
+/* ================================================================
+   Responsive
+   ================================================================ */
+@media (max-width: 768px) {
+  #panel-prediction .sec-4-heading { font-size: 1.9rem !important; }
+  #panel-prediction .graph-box { flex: 1 1 100%; max-width: 100%; }
+  #panel-aqi .aqi-head h1 { font-size: 1.8rem; }
+}
