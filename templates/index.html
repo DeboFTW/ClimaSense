@@ -496,19 +496,55 @@
 
             <!-- Results -->
             <div id="aq-results" class="d-none">
-              <div class="aqi-result-card">
-                <h4 id="aq-city-name">—</h4>
-                <small id="aq-time">—</small>
-                <div class="aqi-number-row">
-                  <span class="aqi-pm25" id="aq-current-pm25">—</span>
-                  <span class="aqi-unit">µg/m³ PM2.5</span>
+              <div class="aqi-dashboard">
+
+                <!-- AQI Summary Card — full-width lead element -->
+                <div class="aqi-summary-card aqi-result-card" id="aq-summary">
+                  <h4 id="aq-city-name">—</h4>
+                  <small id="aq-time">—</small>
+                  <div class="aqi-number-row mt-3">
+                    <span class="aqi-predicted-main" id="aq-predicted-value">—</span>
+                    <span class="aqi-unit">AQI</span>
+                    <span class="badge bg-secondary ms-2 aqi-bucket-badge" id="aq-bucket">—</span>
+                  </div>
+                  <div class="aqi-pm25-context mt-2">
+                    <span class="aqi-pm25" id="aq-current-pm25">—</span>
+                    <span class="aqi-unit">µg/m³ PM2.5</span>
+                    <span class="badge bg-secondary ms-2" id="aq-current-category">—</span>
+                  </div>
                 </div>
-                <span class="badge bg-secondary mt-2" id="aq-current-category">—</span>
-              </div>
-              <div class="aqi-result-card mt-3">
-                <h6 class="mb-3 fw-bold">Forecast</h6>
-                <img id="aq-plot-img" class="img-fluid rounded" alt="Air quality forecast" />
-              </div>
+
+                <!-- Health Advisory Card — adjacent to summary -->
+                <div class="aqi-advisory-card aqi-result-card">
+                  <h6 class="mb-2 fw-bold"><i class="fas fa-heart-pulse"></i> Health Advisory</h6>
+                  <p id="aq-advisory" class="aqi-advisory mb-0">—</p>
+                </div>
+
+                <!-- Forecast Chart Card (5-hour) -->
+                <div class="aqi-chart-card aqi-result-card">
+                  <h6 class="mb-3 fw-bold"><i class="fas fa-chart-line"></i> 5-Hour AQI Forecast</h6>
+                  <canvas id="aq-forecast-chart" height="140"></canvas>
+                </div>
+
+                <!-- Daily Trend Chart Card -->
+                <div class="aqi-chart-card aqi-result-card">
+                  <h6 class="mb-3 fw-bold"><i class="fas fa-calendar-day"></i> Daily Trend</h6>
+                  <canvas id="aq-daily-chart" height="140"></canvas>
+                </div>
+
+                <!-- Weekly Trend Chart Card -->
+                <div class="aqi-chart-card aqi-result-card">
+                  <h6 class="mb-3 fw-bold"><i class="fas fa-calendar-week"></i> Weekly Trend</h6>
+                  <canvas id="aq-weekly-chart" height="140"></canvas>
+                </div>
+
+                <!-- Monthly Trend Chart Card -->
+                <div class="aqi-chart-card aqi-result-card">
+                  <h6 class="mb-3 fw-bold"><i class="fas fa-calendar-alt"></i> Monthly Trend</h6>
+                  <canvas id="aq-monthly-chart" height="140"></canvas>
+                </div>
+
+              </div><!-- /.aqi-dashboard -->
             </div>
 
             <p class="aqi-hint">
@@ -589,6 +625,16 @@
 
       if (!form || !cityInput) return;
 
+      // CPCB color map (Req 13.4 / CPCB_Color_Map)
+      var CPCB_COLORS = {
+        'Good': '#009966',
+        'Satisfactory': '#84cf33',
+        'Moderate': '#ffde33',
+        'Poor': '#ff9933',
+        'Very Poor': '#cc0033',
+        'Severe': '#7e0023'
+      };
+
       function getAQICategory(pm25) {
         if (pm25 <= 12) return { label: 'Good', class: 'text-success' };
         if (pm25 <= 35.4) return { label: 'Moderate', class: 'text-warning' };
@@ -598,11 +644,103 @@
         return { label: 'Hazardous', class: 'text-danger' };
       }
 
+      // Keep references to created Chart instances so we can destroy them
+      // before re-rendering (avoids "Canvas is already in use" errors).
+      var aqCharts = { daily: null, weekly: null, monthly: null, forecast: null };
+
+      function renderTrendChart(key, canvasId, series, label) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas || !series) return;
+        if (aqCharts[key]) { aqCharts[key].destroy(); aqCharts[key] = null; }
+        aqCharts[key] = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: series.labels,
+            datasets: [{
+              label: label,
+              data: series.values,
+              borderColor: '#2b8cbe',
+              backgroundColor: 'rgba(43,140,190,0.15)',
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+
+      // Render the 5-hour Forecast_Chart (Req 12.9)
+      function renderForecastChart(forecastPoints) {
+        var canvas = document.getElementById('aq-forecast-chart');
+        if (!canvas || !forecastPoints || !forecastPoints.length) return;
+        if (aqCharts.forecast) { aqCharts.forecast.destroy(); aqCharts.forecast = null; }
+        var labels = forecastPoints.map(function (p) { return '+' + p.hour_offset + 'h'; });
+        var values = forecastPoints.map(function (p) { return p.aqi; });
+        aqCharts.forecast = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Forecasted AQI',
+              data: values,
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249,115,22,0.15)',
+              tension: 0.3,
+              fill: true,
+              pointBackgroundColor: '#f97316',
+              pointRadius: 5
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+
+      function loadTrends(city) {
+        return fetch('/api/air-quality/' + encodeURIComponent(city) + '/trends')
+          .then(function (resp) {
+            if (!resp.ok) return null;
+            return resp.json();
+          })
+          .then(function (trends) {
+            if (!trends || !trends.success) return;
+            renderTrendChart('daily', 'aq-daily-chart', trends.daily, 'Daily Avg AQI');
+            renderTrendChart('weekly', 'aq-weekly-chart', trends.weekly, 'Weekly Avg AQI');
+            renderTrendChart('monthly', 'aq-monthly-chart', trends.monthly, 'Monthly Avg AQI');
+          })
+          .catch(function () {
+            // Trends are non-critical; skip charts on failure without breaking results.
+          });
+      }
+
+      // Fetch the 5-hour forecast and render the Forecast_Chart (Req 12.9, 12.10)
+      function loadForecast(city) {
+        return fetch('/api/air-quality/' + encodeURIComponent(city) + '/forecast')
+          .then(function (resp) {
+            if (!resp.ok) return null;
+            return resp.json();
+          })
+          .then(function (data) {
+            if (!data || !data.success || !data.forecast) return;
+            renderForecastChart(data.forecast);
+          })
+          .catch(function () {
+            // Forecast is non-critical; skip chart on failure without breaking results.
+          });
+      }
+
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
-        const city = cityInput.value.trim();
+        var city = cityInput.value.trim();
         if (!city) return false;
 
         loadingEl.classList.remove('d-none');
@@ -619,11 +757,10 @@
             return resp.json();
           })
           .then(function (response) {
-            loadingEl.classList.add('d-none');
             if (!response.success) throw new Error(response.error || 'Unknown error');
 
-            const data = response.data;
-            const current = data.current;
+            var data = response.data;
+            var current = data.current;
 
             document.getElementById('aq-city-name').textContent = response.city;
             if (current && current.time) {
@@ -631,15 +768,45 @@
             }
             if (current) {
               document.getElementById('aq-current-pm25').textContent = current.pm25.toFixed(1);
-              const category = getAQICategory(current.pm25);
-              const categoryEl = document.getElementById('aq-current-category');
+              var category = getAQICategory(current.pm25);
+              var categoryEl = document.getElementById('aq-current-category');
               categoryEl.textContent = current.category;
               categoryEl.className = 'badge ' + category.class.replace('text-', 'bg-');
             }
-            const plotImg = document.getElementById('aq-plot-img');
-            plotImg.src = response.plot_url + '?ts=' + Date.now();
+
+            // Predicted AQI, CPCB bucket, and health advisory
+            var predictedEl = document.getElementById('aq-predicted-value');
+            if (predictedEl && response.predicted_aqi != null) {
+              predictedEl.textContent = Number(response.predicted_aqi).toFixed(1);
+            }
+            var bucketEl = document.getElementById('aq-bucket');
+            if (bucketEl && response.bucket) {
+              bucketEl.textContent = response.bucket;
+            }
+            var advisoryEl = document.getElementById('aq-advisory');
+            if (advisoryEl) {
+              advisoryEl.textContent = response.advisory || '';
+            }
+
+            // Apply CPCB color-coding to the summary card (Req 13.4)
+            var summaryCard = document.getElementById('aq-summary');
+            if (summaryCard && response.bucket) {
+              var color = CPCB_COLORS[response.bucket] || '';
+              summaryCard.style.borderLeftColor = color;
+              summaryCard.style.borderLeftWidth = '6px';
+              summaryCard.style.borderLeftStyle = 'solid';
+            }
 
             resultsEl.classList.remove('d-none');
+
+            // Fetch trends and forecast in parallel; keep loading visible until both settle.
+            return Promise.all([
+              loadTrends(response.city || city),
+              loadForecast(response.city || city)
+            ]);
+          })
+          .then(function () {
+            loadingEl.classList.add('d-none');
           })
           .catch(function (err) {
             loadingEl.classList.add('d-none');

@@ -13,6 +13,9 @@ from datetime import datetime, timedelta
 # Import new ML models
 from ml_models.ensemble_model import EnsemblePredictor
 
+# Import AQI prediction service
+from ml_models.aqi import get_aqi_service, ModelUnavailableError, NoDataForCityError
+
 # Import NLP-powered chatbot
 from chatbot_nlp import get_chatbot
 
@@ -640,6 +643,59 @@ def climate():
     summary = data["data"][requested]
     view = build_climate_view(summary, requested, cities)
     return render_template('climate.html', climate_available=True, **view)
+
+
+# ============================================
+# AIR QUALITY INDEX (AQI) API
+# Serves AQI predictions, health advisories, and
+# trend series backed by the ml_models/aqi package.
+# ============================================
+
+@app.route('/api/air-quality/<city>')
+def api_air_quality(city):
+    """Return the predicted AQI, bucket, advisory, and plot for a city."""
+    # Req 10.3: missing/blank city param -> 400 naming the parameter
+    if not city or not city.strip():
+        return jsonify({"success": False, "error": "Missing required parameter: city"}), 400
+    try:
+        result = get_aqi_service().get_air_quality(city)
+        return jsonify(result)
+    except ModelUnavailableError:
+        # Req 6.4: model unavailable -> 503
+        return jsonify({"success": False, "error": "AQI model is unavailable"}), 503
+    except NoDataForCityError:
+        # Req 8.5: no data for city -> 404
+        return jsonify({"success": False, "error": f"No data available for city: {city}"}), 404
+
+
+@app.route('/api/air-quality/<city>/trends')
+def api_air_quality_trends(city):
+    """Return daily/weekly/monthly AQI trend series for a city."""
+    if not city or not city.strip():
+        return jsonify({"success": False, "error": "Missing required parameter: city"}), 400
+    try:
+        result = get_aqi_service().get_trends(city)
+        return jsonify(result)
+    except ModelUnavailableError:
+        return jsonify({"success": False, "error": "AQI model is unavailable"}), 503
+    except NoDataForCityError:
+        return jsonify({"success": False, "error": f"No data available for city: {city}"}), 404
+
+
+@app.route('/api/air-quality/<city>/forecast')
+def api_air_quality_forecast(city):
+    """Return a five-hour recursive AQI forecast series for a city."""
+    if not city or not city.strip():
+        return jsonify({"success": False, "error": "Missing required parameter: city"}), 400
+    try:
+        result = get_aqi_service().get_forecast(city)
+        return jsonify(result)
+    except ModelUnavailableError:
+        # Req 12.8: predictor not loaded -> 503
+        return jsonify({"success": False, "error": "model unavailable"}), 503
+    except NoDataForCityError:
+        # Req 12.7: unknown city -> 404
+        return jsonify({"success": False, "error": "no data for city"}), 404
 
 
 if __name__ == "__main__":

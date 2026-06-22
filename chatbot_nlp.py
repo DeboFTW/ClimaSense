@@ -10,6 +10,13 @@ import warnings
 from pmdarima import auto_arima
 from statsmodels.tsa.arima.model import ARIMA
 
+# AQI service — imported lazily so the chatbot still works if the model is not trained yet
+try:
+    from ml_models.aqi import get_aqi_service, ModelUnavailableError, NoDataForCityError
+    AQI_SERVICE_AVAILABLE = True
+except Exception:
+    AQI_SERVICE_AVAILABLE = False
+
 # Try to load spaCy model, fallback to basic mode if not available
 try:
     nlp = spacy.load("en_core_web_sm")
@@ -39,7 +46,8 @@ class IntentClassifier:
                 'keywords': ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'greetings', 'howdy']
             },
             'about': {
-                'keywords': ['about', 'what is', 'who are you', 'what can you do', 'capabilities', 'features']
+                'keywords': ['about', 'who are you', 'what can you do', 'capabilities', 'features'],
+                'exclude': ['aqi', 'air quality', 'air pollution', 'pollution']
             },
             'help': {
                 'keywords': ['help', 'how to', 'how do i', 'guide', 'tutorial', 'instructions', 'usage']
@@ -66,6 +74,34 @@ class IntentClassifier:
             },
             'humidity': {
                 'keywords': ['humidity', 'humid', 'moisture', 'dampness']
+            },
+            'aqi_current': {
+                # Current / real-time AQI for a city
+                'keywords': ['aqi', 'air quality', 'air pollution', 'pollution', 'pollutant',
+                             'pm2.5', 'pm10', 'particulate', 'smog', 'what is the aqi'],
+                'weight': 4,
+                'exclude': ['forecast', 'predict', 'future', 'next hour', 'upcoming', 'will be']
+            },
+            'aqi_forecast': {
+                # Predicted / future AQI for a city
+                'keywords': ['aqi forecast', 'air quality forecast', 'predict aqi',
+                             'aqi prediction', 'future aqi', 'aqi next', 'pollution forecast',
+                             'predict air quality', 'forecast air quality'],
+                'weight': 5
+            },
+            'aqi_advisory': {
+                # Health advisory / guidance related to AQI
+                'keywords': ['health advisory', 'advisory', 'health alert', 'air safe',
+                             'safe to go out', 'outdoor activity', 'air health', 'is it safe',
+                             'should i go out', 'wear mask', 'air quality safe'],
+                'weight': 3
+            },
+            'aqi_info': {
+                # General info about AQI / CPCB buckets
+                'keywords': ['what is aqi', 'explain aqi', 'aqi category', 'aqi level',
+                             'cpcb', 'aqi bucket', 'good air', 'moderate air', 'poor air',
+                             'very poor air', 'severe air', 'satisfactory air'],
+                'weight': 3
             },
             'thank': {
                 'keywords': ['thank', 'thanks', 'appreciate', 'grateful']
@@ -154,7 +190,8 @@ class EntityExtractor:
     """
     
     def __init__(self):
-        self.weather_keywords = ['weather', 'temperature', 'temp', 'climate', 'forecast', 'predict']
+        self.weather_keywords = ['weather', 'temperature', 'temp', 'climate', 'forecast', 'predict',
+                                 'aqi', 'air quality', 'pollution', 'pm2.5', 'pm10', 'advisory']
     
     def extract_city(self, message):
         """
@@ -168,16 +205,23 @@ class EntityExtractor:
     def _extract_city_with_nlp(self, message):
         """Use spaCy NER to extract city names"""
         doc = nlp(message)
+
+        # Known non-city tokens that spaCy sometimes mis-tags as GPE/PROPN
+        _NON_CITIES = {
+            'aqi', 'pm2.5', 'pm10', 'co', 'no2', 'so2', 'o3', 'cpcb',
+            'climasense', 'arima', 'lstm', 'ml', 'ai', 'nlp'
+        }
         
         # First try: Look for GPE (Geopolitical Entity) or LOC (Location) entities
         for ent in doc.ents:
             if ent.label_ in ['GPE', 'LOC']:
-                return ent.text.title()
+                if ent.text.lower() not in _NON_CITIES:
+                    return ent.text.title()
         
         # Second try: Look for proper nouns near weather keywords
         proper_nouns = []
         for token in doc:
-            if token.pos_ == 'PROPN':
+            if token.pos_ == 'PROPN' and token.text.lower() not in _NON_CITIES:
                 proper_nouns.append(token.text)
         
         if proper_nouns:
@@ -212,6 +256,27 @@ class EntityExtractor:
             'forecast in ',
             'prediction for ',
             'prediction in ',
+            # AQI patterns
+            'aqi in ',
+            'aqi for ',
+            'aqi of ',
+            'air quality in ',
+            'air quality for ',
+            'air quality of ',
+            'air quality at ',
+            'pollution in ',
+            'pollution for ',
+            'pollution at ',
+            'air in ',
+            'air for ',
+            'predict aqi for ',
+            'predict aqi in ',
+            'aqi forecast for ',
+            'aqi forecast in ',
+            'advisory for ',
+            'advisory in ',
+            'health advisory for ',
+            'health advisory in ',
         ]
         
         for pattern in patterns:
@@ -269,6 +334,30 @@ class NLPChatbot:
             response = self._get_weather_prediction(city)
             quick_replies = [f'Current weather in {city}', 'Weather in Tokyo', 'How it works?']
         
+        elif intent == 'aqi_current' and city:
+            response = self._get_aqi(city)
+            quick_replies = [f'AQI forecast for {city}', f'Health advisory for {city}', 'What is AQI?']
+        
+        elif intent == 'aqi_forecast' and city:
+            response = self._get_aqi_forecast(city)
+            quick_replies = [f'Current AQI in {city}', f'Health advisory for {city}', 'What is AQI?']
+        
+        elif intent == 'aqi_advisory' and city:
+            response = self._get_aqi_advisory(city)
+            quick_replies = [f'AQI forecast for {city}', f'Current AQI in {city}', 'What is AQI?']
+        
+        elif intent in ('aqi_current', 'aqi_forecast', 'aqi_advisory') and not city:
+            response = ("I'd be happy to check air quality! 🌬️\n\n"
+                        "Which city would you like?\n\n"
+                        "• 'AQI in Delhi'\n"
+                        "• 'Air quality in Mumbai'\n"
+                        "• 'Is the air safe in Chennai?'")
+            quick_replies = ['AQI in Delhi', 'AQI in Mumbai', 'What is AQI?']
+        
+        elif intent == 'aqi_info':
+            response = self._get_aqi_info_response()
+            quick_replies = ['AQI in Delhi', 'AQI forecast for Mumbai', 'Is it safe in Chennai?']
+        
         elif intent == 'greeting':
             response = self._get_greeting_response()
             quick_replies = ['How to use?', 'Weather in Mumbai', 'Predict weather']
@@ -320,17 +409,26 @@ class NLPChatbot:
             quick_replies = ['Come back soon!']
         
         else:
-            # No specific intent matched. If a city was detected, assume the
-            # user wants current weather (e.g. "How's it in Tokyo?").
+            # No specific intent matched. If a city was detected, check if the
+            # message is AQI-flavoured; otherwise assume current weather.
             if city:
-                response = self._get_current_weather(city)
-                quick_replies = [f'Forecast for {city}', 'Weather in London', 'How accurate?']
+                aqi_keywords = ['aqi', 'air quality', 'pollution', 'air', 'pm2.5', 'pm10', 'smog']
+                is_aqi = any(kw in message.lower() for kw in aqi_keywords)
+                if is_aqi:
+                    response = self._get_aqi(city)
+                    quick_replies = [f'AQI forecast for {city}', f'Health advisory for {city}', 'What is AQI?']
+                else:
+                    response = self._get_current_weather(city)
+                    quick_replies = [f'Forecast for {city}', 'Weather in London', 'How accurate?']
             elif any(keyword in message.lower() for keyword in ['weather', 'temperature', 'forecast', 'predict']):
                 response = "I'd love to help with the weather! 🌤️\n\nCould you specify which city? For example:\n• 'Weather in Mumbai'\n• 'Forecast for London'\n• 'Temperature in New York'"
                 quick_replies = ['Weather in Mumbai', 'Forecast for Tokyo', 'How to use?']
+            elif any(keyword in message.lower() for keyword in ['aqi', 'air quality', 'pollution', 'air']):
+                response = "I'd be happy to check air quality! 🌬️\n\nWhich city would you like?\n\n• 'AQI in Delhi'\n• 'Air quality in Mumbai'\n• 'Pollution in Chennai'"
+                quick_replies = ['AQI in Delhi', 'AQI in Mumbai', 'What is AQI?']
             else:
                 response = self._get_default_response()
-                quick_replies = ['Weather in Delhi', 'Predict weather', 'How to use?']
+                quick_replies = ['Weather in Delhi', 'AQI in Mumbai', 'How to use?']
         
         return response, quick_replies
     
@@ -338,15 +436,45 @@ class NLPChatbot:
     
     def _get_greeting_response(self):
         """Generate greeting response"""
-        return "Hello! 👋 I'm ClimaSense Assistant. I can help you with:\n\n🌤️ **Current weather** - Just ask 'What's the weather in [city]?'\n📊 **Weather predictions** - Ask 'Predict weather for [city]'\n🤖 **Powered by spaCy NLP** - I understand natural language!\n\nTry asking me about weather in your city!"
+        return ("Hello! 👋 I'm ClimaSense Assistant. I can help you with:\n\n"
+                "🌤️ **Current weather** — 'What's the weather in [city]?'\n"
+                "📊 **Weather predictions** — 'Predict weather for [city]'\n"
+                "🌬️ **Air quality (AQI)** — 'AQI in [city]' or 'Is the air safe in [city]?'\n"
+                "💊 **Health advisory** — 'Health advisory for [city]'\n"
+                "🤖 **Powered by spaCy NLP** — I understand natural language!\n\n"
+                "Try asking about weather or air quality in your city!")
     
     def _get_about_response(self):
         """Generate about response"""
-        return "I'm ClimaSense - your smart weather monitoring assistant! 🌤️\n\n✨ **Enhanced with NLP**: I use spaCy to understand natural language better\n🌍 **Global Coverage**: Get weather for any city worldwide\n🤖 **ML-Powered**: ARIMA + LSTM ensemble predictions\n📊 **Accurate**: 94% accuracy within ±2°C\n\nTry asking: 'What's the weather in London?' or 'Predict weather for Tokyo'"
+        return ("I'm ClimaSense — your smart weather and air quality assistant! 🌤️\n\n"
+                "✨ **NLP-powered**: spaCy for intent detection and city extraction\n"
+                "🌍 **Global coverage**: Any city worldwide\n"
+                "🤖 **ML-powered weather**: ARIMA + LSTM ensemble predictions\n"
+                "🌬️ **AQI predictions**: ML-powered air quality index with CPCB categories\n"
+                "💊 **Health advisories**: Actionable guidance based on predicted AQI\n"
+                "📊 **Accurate**: 94% accuracy within ±2°C\n\n"
+                "Try: 'Weather in London', 'AQI in Delhi', or 'Health advisory for Mumbai'")
     
     def _get_help_response(self):
         """Generate help response"""
-        return "Here's how to use ClimaSense:\n\n1️⃣ **Current Weather**: Ask me in natural language!\n   • 'What's the weather in Mumbai?'\n   • 'Tell me about weather in Paris'\n   • 'How's the weather in Tokyo?'\n\n2️⃣ **5-Hour Prediction**: Request forecasts naturally!\n   • 'Predict weather for New York'\n   • 'Weather forecast for London'\n   • 'Future weather in Dubai'\n\n3️⃣ **Smart Understanding**: I use NLP to understand you better!\n\nWhat city would you like to check?"
+        return ("Here's how to use ClimaSense:\n\n"
+                "1️⃣ **Current Weather**:\n"
+                "   • 'What's the weather in Mumbai?'\n"
+                "   • 'How's the weather in Tokyo?'\n\n"
+                "2️⃣ **5-Hour Weather Prediction**:\n"
+                "   • 'Predict weather for New York'\n"
+                "   • 'Weather forecast for London'\n\n"
+                "3️⃣ **Air Quality (AQI)**:\n"
+                "   • 'AQI in Delhi'\n"
+                "   • 'Air quality in Chennai'\n"
+                "   • 'Is the air safe in Kolkata?'\n\n"
+                "4️⃣ **5-Hour AQI Forecast**:\n"
+                "   • 'AQI forecast for Mumbai'\n"
+                "   • 'Predict air quality in Delhi'\n\n"
+                "5️⃣ **Health Advisory**:\n"
+                "   • 'Health advisory for Delhi'\n"
+                "   • 'Should I go out in Mumbai?'\n\n"
+                "What city would you like to check?")
     
     def _get_accuracy_response(self):
         """Generate accuracy response"""
@@ -354,7 +482,21 @@ class NLPChatbot:
     
     def _get_technology_response(self):
         """Generate technology response"""
-        return "Our ML Technology 🤖\n\n**Hybrid Ensemble Model**:\n\n🔹 **ARIMA** (60% weight):\n   • AutoRegressive Integrated Moving Average\n   • Analyzes 168 hourly data points (7 days)\n   • Auto-tunes parameters for optimal accuracy\n   • Perfect for weather time-series data\n\n🔹 **LSTM** (40% weight):\n   • Long Short-Term Memory neural network\n   • Deep learning for complex patterns\n   • 24-hour lookback window\n   • Captures non-linear relationships\n\n🔹 **NLP Processing**:\n   • spaCy for intent detection\n   • Entity recognition for cities\n   • Natural language understanding\n\n📊 Combined accuracy: **94%**!"
+        return ("Our ML Technology 🤖\n\n"
+                "**Weather Prediction — Hybrid Ensemble**:\n\n"
+                "🔹 **ARIMA** (60% weight):\n"
+                "   • Auto-tunes on 168 hourly data points (7 days)\n"
+                "   • Great for stable weather time-series\n\n"
+                "🔹 **LSTM** (40% weight):\n"
+                "   • Deep learning, 24-hour lookback window\n"
+                "   • Captures non-linear patterns\n\n"
+                "**AQI Prediction — XGBoost (best-of-3)**:\n\n"
+                "🔹 Trained on **Linear Regression, Random Forest, XGBoost**\n"
+                "🔹 Best model selected by lowest RMSE\n"
+                "🔹 Features: PM2.5/PM10/NO2/SO2/CO/O3 + lag + rolling averages\n"
+                "🔹 5-hour recursive forecast with CPCB category classification\n\n"
+                "🔹 **NLP**: spaCy for intent detection & entity recognition\n\n"
+                "📊 Weather accuracy: **94%** | AQI: CPCB-standard categories")
     
     def _get_location_response(self):
         """Generate location response"""
@@ -374,10 +516,153 @@ class NLPChatbot:
     
     def _get_default_response(self):
         """Generate default response for unknown intents"""
-        return "I can help you check weather for any city! 🌤️\n\n**Try asking me naturally**:\n• 'What's the weather in Mumbai?'\n• 'Tell me about weather in London'\n• 'Predict weather for Tokyo'\n• 'How's it in New York?'\n• 'How to use ClimaSense?'\n\n🤖 I use NLP to understand you better!\n\nWhich city would you like to check?"
+        return ("I can help with weather and air quality for any city! 🌤️🌬️\n\n"
+                "**Weather**:\n"
+                "• 'What's the weather in Mumbai?'\n"
+                "• 'Predict weather for Tokyo'\n\n"
+                "**Air Quality**:\n"
+                "• 'AQI in Delhi'\n"
+                "• 'Air quality forecast for Chennai'\n"
+                "• 'Is it safe to go out in Kolkata?'\n\n"
+                "🤖 I use NLP to understand natural language!\n\n"
+                "Which city would you like to check?")
     
+    def _get_aqi_info_response(self):
+        """Explain AQI and CPCB categories"""
+        return ("**Air Quality Index (AQI)** 🌬️\n\n"
+                "AQI is a scale (0–500) that summarises air pollution severity "
+                "based on pollutants like PM2.5, PM10, NO2, SO2, CO, and O3.\n\n"
+                "**CPCB Categories** (India):\n"
+                "🟢 **Good** (0–50) — Fresh, safe for everyone\n"
+                "🟡 **Satisfactory** (51–100) — Acceptable; sensitive groups take care\n"
+                "🟠 **Moderate** (101–200) — May cause discomfort for sensitive people\n"
+                "🔴 **Poor** (201–300) — Breathing discomfort for most people\n"
+                "🔴 **Very Poor** (301–400) — Avoid prolonged outdoor activity\n"
+                "🟤 **Severe** (401+) — Serious health effects; stay indoors\n\n"
+                "Ask me: 'AQI in Delhi' or 'Air quality in Mumbai' to get a live reading!")
+
+    # AQI API methods
+
+    def _get_aqi(self, city: str) -> str:
+        """Fetch current AQI prediction for a city via the AQI service."""
+        if not AQI_SERVICE_AVAILABLE:
+            return ("The AQI service is not available right now. 😔\n"
+                    "Make sure the AQI model has been trained by running `train_aqi_model.py`.")
+        try:
+            svc = get_aqi_service()
+            result = svc.get_air_quality(city)
+            aqi = result.get('predicted_aqi')
+            bucket = result.get('bucket', '—')
+            advisory = result.get('advisory', '')
+            current = result.get('data', {}).get('current', {})
+            pm25 = current.get('pm25')
+
+            bucket_emoji = {
+                'Good': '🟢', 'Satisfactory': '🟡', 'Moderate': '🟠',
+                'Poor': '🔴', 'Very Poor': '🔴', 'Severe': '🟤'
+            }.get(bucket, '🌬️')
+
+            lines = [f"🌬️ **Air Quality — {result.get('city', city)}**\n"]
+            lines.append(f"{bucket_emoji} **AQI**: {aqi} ({bucket})")
+            if pm25 is not None:
+                lines.append(f"💨 **PM2.5**: {pm25:.1f} µg/m³")
+            if advisory:
+                lines.append(f"\n💊 **Advisory**: {advisory}")
+            lines.append(f"\nWant a 5-hour forecast? Ask: 'AQI forecast for {city}'")
+            return '\n'.join(lines)
+
+        except ModelUnavailableError:
+            return ("The AQI model isn't loaded yet. 😔\n"
+                    "Run `train_aqi_model.py` to train and save the model first.")
+        except NoDataForCityError:
+            return (f"No AQI data available for '{city}'. 😔\n\n"
+                    "This feature currently covers Indian cities included in the training dataset "
+                    "(e.g. Delhi, Mumbai, Chennai, Kolkata, Bengaluru).\n\n"
+                    "Try: 'AQI in Delhi' or 'Air quality in Mumbai'")
+        except Exception:
+            return f"Sorry, I couldn't get AQI data for '{city}'. Please try again! 🔄"
+
+    def _get_aqi_forecast(self, city: str) -> str:
+        """Fetch the 5-hour recursive AQI forecast for a city."""
+        if not AQI_SERVICE_AVAILABLE:
+            return ("The AQI service is not available right now. 😔\n"
+                    "Make sure the AQI model has been trained by running `train_aqi_model.py`.")
+        try:
+            svc = get_aqi_service()
+            result = svc.get_forecast(city)
+            forecast = result.get('forecast', [])
+
+            bucket_emoji = {
+                'Good': '🟢', 'Satisfactory': '🟡', 'Moderate': '🟠',
+                'Poor': '🔴', 'Very Poor': '🔴', 'Severe': '🟤'
+            }
+
+            lines = [f"🔮 **5-Hour AQI Forecast — {result.get('city', city)}**\n"]
+            for pt in forecast:
+                offset = pt.get('hour_offset', '?')
+                aqi = pt.get('aqi', '—')
+                bucket = pt.get('bucket', '—')
+                emoji = bucket_emoji.get(bucket, '🌬️')
+                lines.append(f"⏰ **+{offset}h**: {float(aqi):.1f} AQI — {emoji} {bucket}")
+
+            # Overall advisory from worst bucket
+            buckets_order = ['Good', 'Satisfactory', 'Moderate', 'Poor', 'Very Poor', 'Severe']
+            all_buckets = [pt.get('bucket', 'Good') for pt in forecast]
+            worst = max(all_buckets, key=lambda b: buckets_order.index(b) if b in buckets_order else 0)
+            if worst in ('Very Poor', 'Severe'):
+                lines.append("\n⚠️ **Avoid outdoor activities** over the next 5 hours.")
+            elif worst == 'Good':
+                lines.append("\n✅ **Air quality looks good** for the next 5 hours!")
+
+            lines.append("\n📊 Powered by ClimaSense AQI ML")
+            return '\n'.join(lines)
+
+        except ModelUnavailableError:
+            return ("The AQI model isn't loaded yet. 😔\n"
+                    "Run `train_aqi_model.py` to train and save the model first.")
+        except NoDataForCityError:
+            return (f"No AQI data available for '{city}'. 😔\n\n"
+                    "This feature covers Indian cities in the training dataset "
+                    "(e.g. Delhi, Mumbai, Chennai, Kolkata, Bengaluru).\n\n"
+                    "Try: 'AQI forecast for Delhi'")
+        except Exception:
+            return f"Sorry, I couldn't generate an AQI forecast for '{city}'. Please try again! 🔄"
+
+    def _get_aqi_advisory(self, city: str) -> str:
+        """Fetch AQI and return the health advisory for a city."""
+        if not AQI_SERVICE_AVAILABLE:
+            return ("The AQI service is not available right now. 😔\n"
+                    "Make sure the AQI model has been trained by running `train_aqi_model.py`.")
+        try:
+            svc = get_aqi_service()
+            result = svc.get_air_quality(city)
+            aqi = result.get('predicted_aqi')
+            bucket = result.get('bucket', '—')
+            advisory = result.get('advisory', 'No advisory available.')
+
+            bucket_emoji = {
+                'Good': '🟢', 'Satisfactory': '🟡', 'Moderate': '🟠',
+                'Poor': '🔴', 'Very Poor': '🔴', 'Severe': '🟤'
+            }.get(bucket, '🌬️')
+
+            lines = [f"💊 **Health Advisory — {result.get('city', city)}**\n"]
+            lines.append(f"{bucket_emoji} **AQI**: {aqi} ({bucket})\n")
+            lines.append(f"**{advisory}**")
+            return '\n'.join(lines)
+
+        except ModelUnavailableError:
+            return ("The AQI model isn't loaded yet. 😔\n"
+                    "Run `train_aqi_model.py` to train and save the model first.")
+        except NoDataForCityError:
+            return (f"No AQI data available for '{city}'. 😔\n\n"
+                    "This feature covers Indian cities in the training dataset "
+                    "(e.g. Delhi, Mumbai, Chennai, Kolkata).\n\n"
+                    "Try: 'Health advisory for Delhi'")
+        except Exception:
+            return f"Sorry, I couldn't get the health advisory for '{city}'. Please try again! 🔄"
+
     # Weather API methods
-    
+
     def _get_current_weather(self, city):
         """Fetch current weather for a city"""
         try:

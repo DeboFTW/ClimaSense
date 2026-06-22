@@ -286,7 +286,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 640px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 70px 28px 80px;
   text-align: center;
@@ -408,4 +408,85 @@
   #panel-prediction .sec-4-heading { font-size: 1.9rem !important; }
   #panel-prediction .graph-box { flex: 1 1 100%; max-width: 100%; }
   #panel-aqi .aqi-head h1 { font-size: 1.8rem; }
+}
+
+/* ================================================================
+   AQI DASHBOARD PANEL LAYOUT  (Task 19.2)
+   Two-column grid; summary card spans full width; reflows at 768px.
+   ================================================================ */
+
+/* Widen the inner container so the dashboard grid has room */
+#panel-aqi #aq-results {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+#panel-aqi .aqi-dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* Summary card spans the full width and leads the panel */
+#panel-aqi .aqi-dashboard .aqi-summary-card {
+  grid-column: 1 / -1;
+}
+
+/* Summary card typography — predicted AQI is the prominent number */
+#panel-aqi .aqi-dashboard .aqi-summary-card .aqi-predicted-main {
+  font-size: 3.8rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0d9488, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+#panel-aqi .aqi-dashboard .aqi-summary-card .aqi-bucket-badge {
+  font-size: 1rem;
+  padding: 6px 14px;
+  border-radius: 20px;
+  vertical-align: middle;
+}
+#panel-aqi .aqi-dashboard .aqi-summary-card .aqi-pm25-context {
+  color: #475569;
+  font-size: 0.95rem;
+}
+#panel-aqi .aqi-dashboard .aqi-summary-card h4 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+
+/* Advisory card */
+#panel-aqi .aqi-dashboard .aqi-advisory-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#panel-aqi .aqi-dashboard .aqi-advisory-card .aqi-advisory {
+  font-size: 0.95rem;
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* Chart cards */
+#panel-aqi .aqi-dashboard .aqi-chart-card {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+#panel-aqi .aqi-dashboard .aqi-chart-card canvas {
+  flex: 1;
+}
+
+/* Responsive: single-column reflow at ≤768px */
+@media (max-width: 768px) {
+  #panel-aqi .aqi-dashboard {
+    grid-template-columns: 1fr;
+  }
 }
